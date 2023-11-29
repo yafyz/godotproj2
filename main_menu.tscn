@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://h871vxnchtfe"]
+
+[ext_resource type="Script" path="res://src/gui/MainMenu.cs" id="1_24b4j"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_24b4j")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 0
+offset_left = 63.0
+offset_top = 27.0
+offset_right = 103.0
+offset_bottom = 53.0
+text = "ass"
+
+[node name="Exit" type="Button" parent="."]
+layout_mode = 0
+offset_left = 57.0
+offset_top = 357.0
+offset_right = 438.0
+offset_bottom = 511.0
+text = "exit"
+
+[node name="NewWorkspace" type="Button" parent="."]
+layout_mode = 0
+offset_left = 57.0
+offset_top = 86.0
+offset_right = 483.0
+offset_bottom = 186.0
+text = "new workspace"
+
+[node name="LoadWorkspace" type="Button" parent="."]
+layout_mode = 0
+offset_left = 59.0
+offset_top = 211.0
+offset_right = 469.0
+offset_bottom = 304.0
+text = "load workspace
+"
