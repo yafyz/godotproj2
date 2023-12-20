@@ -9,13 +9,14 @@ public class Constants
 	}
 
 	public class KeyBindings {
-		public static StringName MoveForward = "move_forward";
-		public static StringName MoveBackward = "move_backward";
-		public static StringName MoveLeft = "move_left";
-		public static StringName MoveRight = "move_right";
-		public static StringName MoveUp = "move_up";
-		public static StringName MoveDown = "move_down";
-		public static StringName MoveFaster = "move_faster";
-		public static StringName RMB = "RMB";
+		public readonly static StringName MoveForward = "move_forward";
+		public readonly static StringName MoveBackward = "move_backward";
+		public readonly static StringName MoveLeft = "move_left";
+		public readonly static StringName MoveRight = "move_right";
+		public readonly static StringName MoveUp = "move_up";
+		public readonly static StringName MoveDown = "move_down";
+		public readonly static StringName MoveFaster = "move_faster";
+		public readonly static StringName RMB = "RMB";
+		public readonly static StringName LMB = "LMB";
 	}
 }

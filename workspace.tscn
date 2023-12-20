@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://hi6nwfd1n8j0"]
 
 [ext_resource type="Script" path="res://src/Workspace.cs" id="1_1dj6f"]
-[ext_resource type="Script" path="res://src/CameraMovement.cs" id="1_pclt0"]
+[ext_resource type="Script" path="res://src/Camera.cs" id="2_b8i1c"]
 [ext_resource type="Script" path="res://src/gui/SpawnerGUI.cs" id="2_q6x6o"]
 
 [sub_resource type="TextMesh" id="TextMesh_lumhp"]
@@ -10,11 +10,12 @@
 script = ExtResource("1_1dj6f")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.566, 0)
 mesh = SubResource("TextMesh_lumhp")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.99473)
-script = ExtResource("1_pclt0")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.421)
+script = ExtResource("2_b8i1c")
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
@@ -136,3 +137,6 @@ offset_bottom = 183.0
 text = "Spawn"
 
 [node name="Bodies" type="Node" parent="."]
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
