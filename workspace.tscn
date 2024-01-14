@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://hi6nwfd1n8j0"]
+[gd_scene load_steps=6 format=3 uid="uid://hi6nwfd1n8j0"]
 
 [ext_resource type="Script" path="res://src/Workspace.cs" id="1_1dj6f"]
 [ext_resource type="Script" path="res://src/Camera.cs" id="2_b8i1c"]
+[ext_resource type="PackedScene" uid="uid://c555mcfr0grv0" path="res://console.tscn" id="2_gaktr"]
 [ext_resource type="Script" path="res://src/gui/SpawnerGUI.cs" id="2_q6x6o"]
 
 [sub_resource type="TextMesh" id="TextMesh_lumhp"]
@@ -140,3 +141,6 @@ text = "Spawn"
 
 [node name="OmniLight3D" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="console" parent="." instance=ExtResource("2_gaktr")]
+visible = false

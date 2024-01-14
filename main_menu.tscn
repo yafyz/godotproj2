@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://h871vxnchtfe"]
+[gd_scene load_steps=3 format=3 uid="uid://h871vxnchtfe"]
 
 [ext_resource type="Script" path="res://src/gui/MainMenu.cs" id="1_24b4j"]
+[ext_resource type="PackedScene" uid="uid://c555mcfr0grv0" path="res://console.tscn" id="2_ydwnj"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -43,3 +44,6 @@ offset_right = 469.0
 offset_bottom = 304.0
 text = "load workspace
 "
+
+[node name="console" parent="." instance=ExtResource("2_ydwnj")]
+layout_mode = 1
