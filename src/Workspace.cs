@@ -1,14 +1,16 @@
 using Godot;
+using Serialization;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 public partial class Workspace : Node3D
 {
-	Simulation simulation;
-	Dictionary<Simulation.Body, SpaceObject> bodyMap;
-	Node bodiesContainer;
-	Camera camera;
+	public Simulation simulation;
+	public Dictionary<Simulation.Body, SpaceObject> bodyMap;
+	public Node bodiesContainer;
+	public Camera camera;
 	public bool TimeFrozen = false;
 	public float Timescale = 1;
 
@@ -98,13 +100,17 @@ public partial class Workspace : Node3D
 			Mass = mass
 		};
 
+		AddBody(body);
+
+		return body;
+	}
+
+	public void AddBody(Simulation.Body body) {
 		var obj = new SpaceObject(body);
 
 		bodiesContainer.AddChild(obj.Mesh);
 
 		bodyMap.Add(body, obj);
 		simulation.AddBody(body);
-
-		return body;
 	}
 }

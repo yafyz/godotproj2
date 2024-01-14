@@ -3,7 +3,7 @@ using System;
 
 public partial class Camera : Camera3D
 {
-	enum CameraBehavior {
+	public enum CameraBehavior {
 		Freecam, Orbit
 	}
 
@@ -13,11 +13,11 @@ public partial class Camera : Camera3D
 	Vector2 LastMousePos;
 	Vector2 MouseDelta;
 
-	Node3D orbitSubject;
+	public Node3D OrbitSubject;
 	float orbitDistance = 2;
 	Vector2 orbitAngle;
 	
-	CameraBehavior Behavior = CameraBehavior.Freecam;
+	public CameraBehavior Behavior = CameraBehavior.Freecam;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -87,7 +87,7 @@ public partial class Camera : Camera3D
 		
 				break;
 			case CameraBehavior.Orbit:
-				if (orbitSubject == null) {
+				if (OrbitSubject == null) {
 					Behavior = CameraBehavior.Freecam;
 					_PhysicsProcess(delta);
 					return;
@@ -95,7 +95,7 @@ public partial class Camera : Camera3D
 
 				/* Camera rotation */
 
-				var orbitPos = orbitSubject.Position;
+				var orbitPos = OrbitSubject.Position;
 
 				if (Input.IsActionPressed(Constants.KeyBindings.RMB))
 				{
@@ -129,19 +129,21 @@ public partial class Camera : Camera3D
 			if (evtm.ButtonIndex == MouseButton.WheelDown) {
 				orbitDistance -= Settings.ScrollSpeed * factor;
 			}
+
+			orbitDistance = MathF.Max(1, orbitDistance);
 		}
     }
 
 	public void SetToFreecam() {
 		Behavior = CameraBehavior.Freecam;
-		orbitSubject = null;
+		OrbitSubject = null;
 	}
 
 	public void SetToOrbit(Node3D obj) {
 		Behavior = CameraBehavior.Orbit;
-		orbitSubject = obj;
+		OrbitSubject = obj;
 		
-		Vector3 relativePos = Position - orbitSubject.Position;
+		Vector3 relativePos = Position - OrbitSubject.Position;
 		Vector2 c = new Vector2(relativePos.X, relativePos.Z).Normalized();
 		orbitAngle = new Vector2(c.Angle(), MathF.Acos(relativePos.Normalized().Y));
 		orbitDistance = (obj.Position - Position).Length();
