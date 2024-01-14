@@ -10,6 +10,7 @@ public partial class Workspace : Node3D
 	Node bodiesContainer;
 	Camera camera;
 	public bool TimeFrozen = false;
+	public float Timescale = 1;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -30,7 +31,7 @@ public partial class Workspace : Node3D
 	{
 
 		if (!TimeFrozen) {
-			simulation.Step(delta);
+			simulation.Step(delta*Timescale);
 
 			foreach ((var body, var node) in bodyMap) {
 				node.Sync();
@@ -74,6 +75,17 @@ public partial class Workspace : Node3D
 					typeof(bool),
 					s => bool.Parse(s),
 					(_, argv, argi) => new(bool.TryParse(argv[argi], out var res) ? Console.HinterInputResult.Ok : Console.HinterInputResult.Error)
+				)
+			}
+		);
+
+		console.AddCommand("timescale", (float s) => Timescale = s,
+			new Console.CommandArgument[] {
+				new(
+					"scale",
+					typeof(float),
+					s => float.Parse(s),
+					(_, argv, argi) => new(float.TryParse(argv[argi], out var res) ? Console.HinterInputResult.Ok : Console.HinterInputResult.Error)
 				)
 			}
 		);
