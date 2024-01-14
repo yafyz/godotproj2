@@ -219,7 +219,42 @@ public partial class Console : Control
 		for (int i = 0; i < cmd.Arguments.Length; i++)
 			args[i] = cmd.Arguments[i].ParserFunc(argv[i+1]);
 
-		cmd.Call(args);	
+		cmd.Call(args);
+	}
+
+	void Autocomplete() {
+		var argv = input.Split(" ");
+
+		if (argv.Length == 1 && argv[0].Trim() != "") {
+			var hint =
+					commands
+						.Select(x => x.Key)
+						.FirstOrDefault(x => x.StartsWith(argv[0]));
+
+			if (hint != null) {
+				argv[0] = hint;
+				input = string.Join(" ", argv);
+			}
+		} else if (argv.Length > 1 && commands.TryGetValue(argv[0], out var cmd)) {
+			if (argv.Length-1 > cmd.Arguments.Length)
+				return;
+
+			var argi = argv.Length-1;
+
+			if (argv[argi].Trim() == "")
+				return;
+
+			var arg = cmd.Arguments[argi-1];
+			if (arg.HinterFunc == null)
+				return;
+
+			var res = arg.HinterFunc(cmd, argv, argi);
+
+			if (res.InputResult == HinterInputResult.Hint && res.Hints.Any()) {
+				argv[argi] += res.Hints.First();
+				input = string.Join(" ", argv);
+			}
+		}
 	}
 
 	void HandleInput(Key keycode, bool caps) {
@@ -233,6 +268,9 @@ public partial class Console : Control
 				break;
 			case Key.Space:
 				input += " ";
+				break;
+			case Key.Tab:
+				Autocomplete();
 				break;
 			default:
 				var key = (char)keycode;
@@ -312,7 +350,7 @@ public partial class Console : Control
 
 		public CommandArgument(string name, Type valueType = null, Parser parser = null, Hinter hinter = null) {
 			Name = name;
-			
+
 			ParserFunc = parser ?? (x => x);
 			HinterFunc = hinter;
 
