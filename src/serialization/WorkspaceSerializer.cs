@@ -54,7 +54,7 @@ public class WorkspaceSerializer {
         workspace.camera.Rotation = reader.ReadVector3();
 
         bool is_orbit = reader.ReadBool();
-        int orbit_index = reader.ReadInt32();
+        int orbit_index = is_orbit ? reader.ReadInt32() : -1;
 
         workspace.bodyMap = new();
         workspace.simulation = new();
