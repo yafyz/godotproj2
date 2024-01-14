@@ -72,6 +72,7 @@ public class WorkspaceSerializer {
             GD.Print($"{body.Position} {body.Velocity}");
 
             workspace.AddBody(body);
+            workspace.bodyMap[body].Sync();
 
             if (is_orbit && i == orbit_index) {
                 workspace.camera.SetToOrbit(workspace.bodyMap[body].Mesh);
