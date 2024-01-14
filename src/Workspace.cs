@@ -13,6 +13,8 @@ public partial class Workspace : Node3D
 	public Camera camera;
 	public bool TimeFrozen = false;
 	public float Timescale = 1;
+	public double PhysicsRate = 0.01f;
+	public double PhysicsRateRemainder = 0;
 
 	SavesManager savesManager;
 
@@ -37,7 +39,12 @@ public partial class Workspace : Node3D
 	{
 
 		if (!TimeFrozen) {
-			simulation.Step(delta*Timescale);
+			var d = delta * Timescale + PhysicsRateRemainder;
+			PhysicsRateRemainder = d % PhysicsRate;
+
+			for (int i = 0; i < d/PhysicsRate; i++) {
+				simulation.Step(PhysicsRate);
+			}
 
 			foreach ((var body, var node) in bodyMap) {
 				node.Sync();
@@ -130,6 +137,17 @@ public partial class Workspace : Node3D
 					typeof(float),
 					s => float.Parse(s),
 					(_, argv, argi) => new(float.TryParse(argv[argi], out var res) ? Console.HinterInputResult.Ok : Console.HinterInputResult.Error)
+				)
+			}
+		);
+
+		console.AddCommand("physicsrate", (double s) => PhysicsRate = s,
+			new Console.CommandArgument[] {
+				new(
+					"rate",
+					typeof(double),
+					s => double.Parse(s),
+					(_, argv, argi) => new(double.TryParse(argv[argi], out var res) ? Console.HinterInputResult.Ok : Console.HinterInputResult.Error)
 				)
 			}
 		);
