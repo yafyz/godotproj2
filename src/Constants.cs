@@ -8,6 +8,10 @@ public class Constants
 		public static StringName Workspace = "res://workspace.tscn";
 	}
 
+	public class Singletons {
+		public static NodePath SavesManager = "/root/SavesManager";
+	}
+
 	public class KeyBindings {
 		public readonly static StringName MoveForward = "move_forward";
 		public readonly static StringName MoveBackward = "move_backward";
