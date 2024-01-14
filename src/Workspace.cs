@@ -14,9 +14,13 @@ public partial class Workspace : Node3D
 	public bool TimeFrozen = false;
 	public float Timescale = 1;
 
+	SavesManager savesManager;
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		savesManager = GetNode<SavesManager>(Constants.Singletons.SavesManager);
+
 		simulation = new();
 		bodyMap = new();
 		bodiesContainer = GetNode<Node>("Bodies");
@@ -69,7 +73,45 @@ public partial class Workspace : Node3D
 
 	public void RegisterCommands() {
 		Console console = GetNode<Console>("console");
-		
+
+		console.AddCommand("save", (string filename) => {
+			savesManager.Save(this, filename);
+		}, new Console.CommandArgument[] {
+			new(
+				"filename",
+				typeof(string),
+				null,
+				(_, argv, argi) => {
+					var hints = savesManager.Files.Where(x => x.StartsWith(argv[argi]));
+					if (hints.Any(x => x == argv[argi])) {
+						return new(Console.HinterInputResult.Ok);
+					} else {
+						return new(Console.HinterInputResult.Hint, hints.Select(x=>x[argv[argi].Length..]));
+					}
+				}
+			)
+		});
+
+		console.AddCommand("load", (string filename) => {
+			savesManager.Load(this, filename);
+		}, new Console.CommandArgument[] {
+			new(
+				"filename",
+				typeof(string),
+				null,
+				(_, argv, argi) => {
+					var hints = savesManager.Files.Where(x => x.StartsWith(argv[argi]));
+					if (hints.Any(x => x == argv[argi])) {
+						return new(Console.HinterInputResult.Ok);
+					} else if (hints.Any()) {
+						return new(Console.HinterInputResult.Hint, hints.Select(x=>x[argv[argi].Length..]));
+					} else {
+						return new(Console.HinterInputResult.Error, new string[] {"no such file exists"});
+					}
+				}
+			)
+		});
+
 		console.AddCommand("freeze", (bool s) => TimeFrozen = s,
 			new Console.CommandArgument[] {
 				new(
