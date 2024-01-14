@@ -9,6 +9,7 @@ public partial class Workspace : Node3D
 	Dictionary<Simulation.Body, SpaceObject> bodyMap;
 	Node bodiesContainer;
 	Camera camera;
+	public bool TimeFrozen = false;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -20,15 +21,20 @@ public partial class Workspace : Node3D
 
 		(GetNode<MeshInstance3D>("MeshInstance3D").Mesh as TextMesh)
 			.Text = "balls";
+
+		RegisterCommands();
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _PhysicsProcess(double delta)
 	{
-		simulation.Step(delta);
 
-		foreach ((var body, var node) in bodyMap) {
-			node.Sync();
+		if (!TimeFrozen) {
+			simulation.Step(delta);
+
+			foreach ((var body, var node) in bodyMap) {
+				node.Sync();
+			}
 		}
 
 		/* Body selector for orbit cam */
@@ -56,6 +62,21 @@ public partial class Workspace : Node3D
 				}
 			}
 		}
+	}
+
+	public void RegisterCommands() {
+		Console console = GetNode<Console>("console");
+		
+		console.AddCommand("freeze", (bool s) => TimeFrozen = s,
+			new Console.CommandArgument[] {
+				new(
+					"frozen",
+					typeof(bool),
+					s => bool.Parse(s),
+					(_, argv, argi) => new(bool.TryParse(argv[argi], out var res) ? Console.HinterInputResult.Ok : Console.HinterInputResult.Error)
+				)
+			}
+		);
 	}
 
 	public Simulation.Body AddBody(Vector3D position, Vector3D velocity, double mass) {
