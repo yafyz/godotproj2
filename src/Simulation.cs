@@ -60,7 +60,7 @@ public class SpaceObject {
 	public MeshInstance3D AccelerationArrow;
 	public MeshInstance3D VelocityArrow;
 
-	public SpaceObject(Simulation.Body simbody) {
+	public SpaceObject(Simulation.Body simbody, double scale = 1) {
 		SimBody = simbody;
 
 		Mesh = new MeshInstance3D();
@@ -91,11 +91,11 @@ public class SpaceObject {
 		Mesh.AddChild(AccelerationArrow);
 		Mesh.AddChild(VelocityArrow);
 
-		Sync();
+		Sync(scale);
 	}
 
-	public void Sync() {
-		var pos = SimBody.Position.ToVector3F();
+	public void Sync(double scale) {
+		var pos = (SimBody.Position/scale).ToVector3F();
 		Mesh.Position = pos;
 		Body3D.Scale = Mesh.Scale;
 
@@ -152,6 +152,9 @@ public struct Vector3D {
 
 	public static Vector3D operator -(Vector3D a)
 		=> new(-a.X, -a.Y, -a.Z);
+
+	public static Vector3D operator /(Vector3D vec, double value)
+		=> new(vec.X/value, vec.Y/value, vec.Z/value);
 
     public override string ToString()
 		=> $"({X}, {Y}, {Z})";

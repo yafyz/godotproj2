@@ -9,12 +9,17 @@ namespace Serialization;
 
 public class WorkspaceSerializer {
     public static byte[] Magic = {0x7F, (byte)'b', (byte)'a', (byte)'l', (byte)'l', (byte)'s'};
-    public static int Version = 1;
+    public static int Version = 2;
 
     public static void Serialize(Workspace workspace, Writer writer) {
+        // header
         writer.WriteBytes(Magic);
         writer.WriteInt32(Version);
 
+        // workspace settings
+        writer.WriteDouble(workspace.VisualScale);
+
+        // camera
         writer.WriteVector3(workspace.camera.Position);
         writer.WriteVector3(workspace.camera.Rotation);
         writer.WriteBool(workspace.camera.Behavior == Camera.CameraBehavior.Orbit);
@@ -25,6 +30,7 @@ public class WorkspaceSerializer {
             writer.WriteInt32(index);
         }
 
+        // bodies
         writer.WriteInt32(workspace.bodyMap.Count);
         foreach (var body in workspace.simulation.BodyList) {
             writer.WriteVector3D(body.Position);
@@ -36,6 +42,7 @@ public class WorkspaceSerializer {
     }
 
     public static void Deserialize(Workspace workspace, Reader reader) {
+        // header
         if (!reader.ReadBytes(Magic.Length).SequenceEqual(Magic)) {
             throw new Exception("Invalid magic");
         }
@@ -44,17 +51,22 @@ public class WorkspaceSerializer {
             throw new Exception("Version not matching");
         }
 
-        foreach ((_, var spaceobject) in workspace.bodyMap) {
-            workspace.RemoveChild(spaceobject.Mesh);
-            spaceobject.Mesh.QueueFree();
-        }
+        // workspace settings
+        workspace.VisualScale = reader.ReadDouble();
 
+        // camera
         workspace.camera.SetToFreecam();
         workspace.camera.Position = reader.ReadVector3();
         workspace.camera.Rotation = reader.ReadVector3();
 
         bool is_orbit = reader.ReadBool();
         int orbit_index = is_orbit ? reader.ReadInt32() : -1;
+
+        // bodies
+        foreach ((_, var spaceobject) in workspace.bodyMap) {
+            workspace.RemoveChild(spaceobject.Mesh);
+            spaceobject.Mesh.QueueFree();
+        }
 
         workspace.bodyMap = new();
         workspace.simulation = new();
@@ -69,10 +81,8 @@ public class WorkspaceSerializer {
                 Mass = reader.ReadDouble()
             };
 
-            GD.Print($"{body.Position} {body.Velocity}");
-
             workspace.AddBody(body);
-            workspace.bodyMap[body].Sync();
+            workspace.bodyMap[body].Sync(workspace.VisualScale);
 
             if (is_orbit && i == orbit_index) {
                 workspace.camera.SetToOrbit(workspace.bodyMap[body].Mesh);

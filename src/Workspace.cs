@@ -15,6 +15,7 @@ public partial class Workspace : Node3D
 	public float Timescale = 1;
 	public double PhysicsRate = 0.01f;
 	public double PhysicsRateRemainder = 0;
+	public double VisualScale = 1;
 
 	SavesManager savesManager;
 
@@ -47,7 +48,7 @@ public partial class Workspace : Node3D
 			}
 
 			foreach ((var body, var node) in bodyMap) {
-				node.Sync();
+				node.Sync(VisualScale);
 			}
 		}
 
@@ -151,6 +152,23 @@ public partial class Workspace : Node3D
 				)
 			}
 		);
+
+		console.AddCommand("scale",
+			(double s) => {
+				VisualScale = s;
+				foreach ((var body, var node) in bodyMap) {
+					node.Sync(VisualScale);
+				}
+			},
+			new Console.CommandArgument[] {
+				new(
+					"scale",
+					typeof(double),
+					s => double.Parse(s),
+					(_, argv, argi) => new(double.TryParse(argv[argi], out var res) ? Console.HinterInputResult.Ok : Console.HinterInputResult.Error)
+				)
+			}
+		);
 	}
 
 	public Simulation.Body AddBody(Vector3D position, Vector3D velocity, double mass) {
@@ -166,7 +184,7 @@ public partial class Workspace : Node3D
 	}
 
 	public void AddBody(Simulation.Body body) {
-		var obj = new SpaceObject(body);
+		var obj = new SpaceObject(body, VisualScale);
 
 		bodiesContainer.AddChild(obj.Mesh);
 
