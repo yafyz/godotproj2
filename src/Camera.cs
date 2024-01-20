@@ -100,7 +100,7 @@ public partial class Camera : Camera3D
 				if (Input.IsActionPressed(Constants.KeyBindings.RMB))
 				{
 					orbitAngle.X += MouseDelta.X * Settings.MouseSensitivity;
-					orbitAngle.Y = Math.Clamp(orbitAngle.Y - MouseDelta.Y * Settings.MouseSensitivity, 0.0001f, 2*MathF.PI);
+					orbitAngle.Y = Math.Clamp(orbitAngle.Y - MouseDelta.Y * Settings.MouseSensitivity, 0.0001f, MathF.PI*0.9999f);
 				}
 
 				Vector2 zxPlane = new Vector2(MathF.Cos(orbitAngle.X), Mathf.Sin(orbitAngle.X)) * orbitDistance * MathF.Sin(orbitAngle.Y);
