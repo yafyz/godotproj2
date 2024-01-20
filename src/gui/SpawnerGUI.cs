@@ -41,11 +41,6 @@ public partial class SpawnerGUI : Panel
 		Spawn_button.Pressed += SpawnButtonClicked;
 	}
 
-    public override void _Process(double delta)
-    {
-		Position = Position with {Y = GetWindow().Size.Y-Size.Y};
-    }
-
     public void SpawnButtonClicked() {
 		Vector3D position = Position_input.GetValue();
 		Vector3D velocity = Velocity_input.GetValue();
@@ -56,5 +51,26 @@ public partial class SpawnerGUI : Panel
 		Position_input.Reset();
 		Velocity_input.Reset();
 		Mass_input.Text = "";
+
+		Toggle();
 	}
+
+	public void Toggle() {
+		Visible = !Visible;
+	}
+
+    public override void _Input(InputEvent @event)
+    {
+		if (@event.IsActionPressed(Constants.KeyBindings.ESC) && Visible) {
+			Toggle();
+			GetViewport().SetInputAsHandled();
+		}
+    }
+
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+		if (@event.IsActionPressed(Constants.KeyBindings.OpenSpawnMenu)) {
+			Toggle();
+		}
+    }
 }

@@ -27,5 +27,6 @@ public class Constants
 		public readonly static StringName OpenConsole = "open_console";
 		public readonly static StringName CloseConsole = "close_console";
 
+		public readonly static StringName OpenSpawnMenu = "open_spawn_menu";
 	}
 }
