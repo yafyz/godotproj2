@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://hi6nwfd1n8j0"]
+[gd_scene load_steps=7 format=3 uid="uid://hi6nwfd1n8j0"]
 
 [ext_resource type="Script" path="res://src/Workspace.cs" id="1_1dj6f"]
 [ext_resource type="Script" path="res://src/Camera.cs" id="2_b8i1c"]
 [ext_resource type="PackedScene" uid="uid://c555mcfr0grv0" path="res://console.tscn" id="2_gaktr"]
 [ext_resource type="Script" path="res://src/gui/SpawnerGUI.cs" id="2_q6x6o"]
+[ext_resource type="Script" path="res://src/gui/EscMenu.cs" id="4_sde3u"]
 
 [sub_resource type="TextMesh" id="TextMesh_lumhp"]
 
@@ -149,6 +150,54 @@ text = "Spawn"
 
 [node name="OmniLight3D" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="Menu" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_sde3u")
+
+[node name="Panel" type="Panel" parent="Menu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -162.0
+offset_top = -132.0
+offset_right = 162.0
+offset_bottom = 132.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Save" type="Button" parent="Menu/Panel"]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 36.0
+offset_right = 269.0
+offset_bottom = 86.0
+text = "save"
+
+[node name="Menu" type="Button" parent="Menu/Panel"]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 102.0
+offset_right = 269.0
+offset_bottom = 152.0
+text = "menu"
+
+[node name="Exit" type="Button" parent="Menu/Panel"]
+layout_mode = 0
+offset_left = 58.0
+offset_top = 169.0
+offset_right = 272.0
+offset_bottom = 219.0
+text = "exit"
 
 [node name="console" parent="." instance=ExtResource("2_gaktr")]
 visible = false
