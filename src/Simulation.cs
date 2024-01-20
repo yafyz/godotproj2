@@ -100,12 +100,23 @@ public class SpaceObject {
 		Body3D.Scale = Mesh.Scale;
 
 		var accel = SimBody.Acceleration.ToVector3F();
-		AccelerationArrow.Scale = new(0.05f, 0.05f, 1f);
-		AccelerationArrow.LookAtFromPosition(Mesh.Position+accel.Normalized(), Mesh.Position+accel);
-	
+		if (accel.Length() >= 0.0001) {
+			AccelerationArrow.Scale = new(0.05f, 0.05f, accel.Length()/(float)scale);
+			var point_accel = Mesh.Position + accel.Normalized()*(AccelerationArrow.Scale.Z/2+Mesh.Scale.Z/2);
+			AccelerationArrow.LookAtFromPosition(point_accel, point_accel+accel);
+		} else {
+			// hack instead of setting Visible so i dont have to set Visible above
+			AccelerationArrow.Scale = new(0.05f, 0.05f, 0);
+		}
+
 		var vel = SimBody.Velocity.ToVector3F();
-		VelocityArrow.Scale = new(0.05f, 0.05f, 1f);
-		VelocityArrow.LookAtFromPosition(Mesh.Position+vel.Normalized(), Mesh.Position+vel);
+		if (vel.Length() >= 0.0001) {
+			VelocityArrow.Scale = new(0.05f, 0.05f, vel.Length()/(float)scale);
+			var point_vel = Mesh.Position + vel.Normalized()*(VelocityArrow.Scale.Z/2+Mesh.Scale.Z/2);
+			VelocityArrow.LookAtFromPosition(point_vel, point_vel+vel);
+		} else {
+			VelocityArrow.Scale = new(0.05f, 0.05f, 0);
+		}
 	}
 }
 
