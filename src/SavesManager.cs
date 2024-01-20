@@ -9,6 +9,8 @@ public partial class SavesManager : Node {
     public const string SavesFolder = "saves";
     public string[] Files = Array.Empty<string>();
 
+    public event Action OnFilesChanged;
+
     public override void _Ready()
     {
         if (!Directory.Exists(SavesFolder))
@@ -16,9 +18,16 @@ public partial class SavesManager : Node {
 
         new Thread(() => {
             while (true) {
+                var oldFiles = Files;
+
                 Files = Directory.GetFiles(SavesFolder)
                     .Select(x => Path.GetFileName(x))
                     .ToArray();
+
+                if (!oldFiles.All(x => Files.Contains(x))) {
+                    OnFilesChanged?.Invoke();
+                }
+
                 Thread.Sleep(1000);
             }
         }).Start();

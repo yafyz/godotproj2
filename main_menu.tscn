@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://h871vxnchtfe"]
+[gd_scene load_steps=4 format=3 uid="uid://h871vxnchtfe"]
 
 [ext_resource type="Script" path="res://src/gui/MainMenu.cs" id="1_24b4j"]
 [ext_resource type="PackedScene" uid="uid://c555mcfr0grv0" path="res://console.tscn" id="2_ydwnj"]
+[ext_resource type="Script" path="res://src/gui/SavesGui.cs" id="3_d5v86"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -45,5 +46,95 @@ offset_bottom = 304.0
 text = "load workspace
 "
 
+[node name="Saves" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_d5v86")
+
+[node name="SaveList" type="ItemList" parent="Saves"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -616.0
+offset_top = -227.0
+offset_right = -214.0
+offset_bottom = 212.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Close" type="Button" parent="Saves"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = -79.0
+offset_right = 125.0
+offset_bottom = -27.0
+grow_vertical = 0
+text = "close"
+
+[node name="Load" type="Button" parent="Saves"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -136.0
+offset_top = -79.0
+offset_right = -30.0
+offset_bottom = -32.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "load"
+
+[node name="SaveNameDialog" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = -64.0
+offset_right = 190.0
+offset_bottom = 64.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Filename" type="TextEdit" parent="SaveNameDialog"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 14.0
+offset_right = 359.0
+offset_bottom = 59.0
+placeholder_text = "file name"
+
+[node name="Ok" type="Button" parent="SaveNameDialog"]
+layout_mode = 0
+offset_left = 51.0
+offset_top = 75.0
+offset_right = 118.0
+offset_bottom = 106.0
+text = "ok"
+
+[node name="Close" type="Button" parent="SaveNameDialog"]
+offset_left = 237.0
+offset_top = 75.0
+offset_right = 304.0
+offset_bottom = 106.0
+text = "close"
+
 [node name="console" parent="." instance=ExtResource("2_ydwnj")]
+visible = false
 layout_mode = 1

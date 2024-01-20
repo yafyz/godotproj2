@@ -17,6 +17,8 @@ public partial class Workspace : Node3D
 	public double PhysicsRateRemainder = 0;
 	public double VisualScale = 1;
 
+	public string SaveFile;
+
 	SavesManager savesManager;
 
 	// Called when the node enters the scene tree for the first time.
@@ -33,6 +35,10 @@ public partial class Workspace : Node3D
 			.Text = "balls";
 
 		RegisterCommands();
+
+		if (SaveFile != null) {
+			savesManager.Load(this, SaveFile);
+		}
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -79,12 +85,24 @@ public partial class Workspace : Node3D
 		}
 	}
 
+	public void Save(string filename = null) {
+		filename ??= SaveFile;
+		savesManager.Save(this, filename);
+		SaveFile = filename;
+	}
+
+	public void Load(string filename = null) {
+		filename ??= SaveFile;
+		savesManager.Load(this, filename);
+		SaveFile = filename;
+	}
+
 	public void RegisterCommands() {
 		Console console = GetNode<Console>("console");
 
-		console.AddCommand("save", (string filename) => {
-			savesManager.Save(this, filename);
-		}, new Console.CommandArgument[] {
+		console.AddCommand("save",
+			(string filename) => Save(filename),
+			new Console.CommandArgument[] {
 			new(
 				"filename",
 				typeof(string),
@@ -100,9 +118,9 @@ public partial class Workspace : Node3D
 			)
 		});
 
-		console.AddCommand("load", (string filename) => {
-			savesManager.Load(this, filename);
-		}, new Console.CommandArgument[] {
+		console.AddCommand("load",
+			(string filename) => Load(filename),
+			new Console.CommandArgument[] {
 			new(
 				"filename",
 				typeof(string),
