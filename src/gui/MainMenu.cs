@@ -59,6 +59,7 @@ public partial class MainMenu : Control
 		workspace.SaveFile = saveNameDialog_Text.Text;
 
 		GetTree().Root.AddChild(workspace);
-		GetTree().Root.RemoveChild(GetTree().CurrentScene);
+		GetTree().CurrentScene.QueueFree();
+		GetTree().CurrentScene = workspace;
 	}
 }

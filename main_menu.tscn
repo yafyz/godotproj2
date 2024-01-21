@@ -129,6 +129,7 @@ offset_bottom = 106.0
 text = "ok"
 
 [node name="Close" type="Button" parent="SaveNameDialog"]
+layout_mode = 0
 offset_left = 237.0
 offset_top = 75.0
 offset_right = 304.0
