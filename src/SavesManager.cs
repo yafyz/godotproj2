@@ -39,6 +39,8 @@ public partial class SavesManager : Node {
     }
 
     public void Load(Workspace workspace, string filename) {
+        if (!File.Exists($"{SavesFolder}/{filename}"))
+            return;
         using var s = File.Open($"{SavesFolder}/{filename}", FileMode.Open);
         WorkspaceSerializer.Deserialize(workspace, new Reader(s));
     }

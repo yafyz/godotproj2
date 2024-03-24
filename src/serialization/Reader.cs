@@ -65,4 +65,14 @@ public class Reader {
             throw new ArgumentException("EOF");
         return v != 0;
     }
+
+    public StoredImage ReadImage()
+    {
+        var name = ReadString();
+        StoredImage.ImageFormat format = (StoredImage.ImageFormat)ReadInt32();
+        var dataLength = ReadInt32();
+        var data = ReadBytes(dataLength);
+
+        return new StoredImage(name, format, data);
+    }
 }

@@ -1,0 +1,45 @@
+[gd_scene load_steps=3 format=3 uid="uid://upfujkmlpkjd"]
+
+[ext_resource type="Script" path="res://src/gui/Vector3DControl.cs" id="1_gy882"]
+[ext_resource type="Script" path="res://src/gui/DoubleInput.cs" id="1_wfnfj"]
+
+[node name="Vector3DControl" type="Control"]
+layout_direction = 2
+layout_mode = 3
+anchors_preset = 0
+offset_right = 202.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gy882")
+
+[node name="X" type="LineEdit" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.332
+anchor_bottom = 0.975
+offset_right = -0.00150299
+placeholder_text = "X=0"
+script = ExtResource("1_wfnfj")
+
+[node name="Y" type="LineEdit" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.332
+anchor_right = 0.664
+anchor_bottom = 0.975
+offset_left = -0.064003
+offset_right = -0.065506
+placeholder_text = "Y=0"
+script = ExtResource("1_wfnfj")
+
+[node name="Z" type="LineEdit" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.663
+anchor_right = 0.995
+anchor_bottom = 0.975
+offset_left = 0.0739899
+offset_right = 0.0724945
+placeholder_text = "Z=0"
+script = ExtResource("1_wfnfj")

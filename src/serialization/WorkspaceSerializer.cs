@@ -9,13 +9,19 @@ namespace Serialization;
 
 public class WorkspaceSerializer {
     public static byte[] Magic = {0x7F, (byte)'b', (byte)'a', (byte)'l', (byte)'l', (byte)'s'};
-    public static int Version = 2;
+    public static int Version = 3;
 
     public static void Serialize(Workspace workspace, Writer writer) {
         // header
         writer.WriteBytes(Magic);
         writer.WriteInt32(Version);
 
+        // textures
+        writer.WriteInt32(workspace.textureManager.Images.Count);
+        foreach (var image in workspace.textureManager.Images) {
+            writer.WriteImage(image);
+        }
+        
         // workspace settings
         writer.WriteDouble(workspace.VisualScale);
 
@@ -38,6 +44,9 @@ public class WorkspaceSerializer {
             writer.WriteVector3D(body.OldAcceleration);
             writer.WriteVector3D(body.Acceleration);
             writer.WriteDouble(body.Mass);
+            writer.WriteDouble(body.Density);
+            writer.WriteDouble(body.EnergyLumens);
+            writer.WriteString(workspace.bodyMap[body].Image?.Name ?? "");
         }
     }
 
@@ -51,6 +60,15 @@ public class WorkspaceSerializer {
             throw new Exception("Version not matching");
         }
 
+        // textures
+        workspace.textureManager.Clear();
+        
+        int texture_count = reader.ReadInt32();
+        for (int i = 0; i < texture_count; i++) {
+            var img = reader.ReadImage();
+            workspace.textureManager.AddItem(img);
+        }
+        
         // workspace settings
         workspace.VisualScale = reader.ReadDouble();
 
@@ -78,10 +96,19 @@ public class WorkspaceSerializer {
                 Velocity = reader.ReadVector3D(),
                 OldAcceleration = reader.ReadVector3D(),
                 Acceleration = reader.ReadVector3D(),
-                Mass = reader.ReadDouble()
+                Mass = reader.ReadDouble(),
+                Density = reader.ReadDouble(),
+                EnergyLumens = reader.ReadDouble()
             };
 
             workspace.AddBody(body);
+            
+            var textureName = reader.ReadString();
+            if (!string.IsNullOrEmpty(textureName)) {
+                var img = workspace.textureManager.Images.First(x => x.Name == textureName);
+                workspace.bodyMap[body].SetTexture(img);
+            }
+
             workspace.bodyMap[body].Sync(workspace.VisualScale);
 
             if (is_orbit && i == orbit_index) {

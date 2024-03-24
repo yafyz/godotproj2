@@ -19,9 +19,13 @@ public partial class Camera : Camera3D
 	
 	public CameraBehavior Behavior = CameraBehavior.Freecam;
 
+	private UIFocus uiFocus;
+	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		uiFocus = GetNode<UIFocus>(Constants.Singletons.UIFocus);
+		
 		GD.Print("balls cam");
 	}
 
@@ -45,7 +49,7 @@ public partial class Camera : Camera3D
 
 				/* Camera movement */
 
-				if (Behavior == CameraBehavior.Freecam) {
+				if (Behavior == CameraBehavior.Freecam && !uiFocus.IsFocused) {
 					float length = (float)delta*Speed;
 					var direction = Vector3Helper.AnglesToUnit(rotation.Y, rotation.X);
 					var side_vector = new Vector3((float)-Math.Cos(rotation.Y), 0, (float)Math.Sin(rotation.Y))

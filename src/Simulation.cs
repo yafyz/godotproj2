@@ -28,8 +28,12 @@ public class Simulation
 				if (body == body2) continue;
 
 				Vector3D off = body.Position-body2.Position;
-				double force = NewtonGravConstant*(body2.Mass/off.Length());
-				acc += -off.Normalize()*force;
+				
+				double fg = NewtonGravConstant*((body.Mass*body2.Mass)/off.LengthSquared());
+				double force = fg * (body2.Mass / (body.Mass + body2.Mass));
+				double accel = force / body.Mass;
+				
+				acc += -off.Normalize()*accel;
 			}
 
 			body.OldAcceleration = body.Acceleration;
@@ -46,6 +50,8 @@ public class Simulation
 		public Vector3D Position;
 		public Vector3D Velocity;
 		public double Mass;
+		public double Density;
+		public double EnergyLumens;
 		public Vector3D OldAcceleration;
 		public Vector3D Acceleration;
 	}
@@ -57,15 +63,25 @@ public class SpaceObject {
 	public CollisionShape3D Collider;
 	public Simulation.Body SimBody;
 
+	public StandardMaterial3D Material;
+	public OmniLight3D Light;
+	
 	public MeshInstance3D AccelerationArrow;
 	public MeshInstance3D VelocityArrow;
+
+	public StoredImage Image;
 
 	public SpaceObject(Simulation.Body simbody, double scale = 1) {
 		SimBody = simbody;
 
+		Material = new StandardMaterial3D();
+		Material.AlbedoColor = new Color(1, 1, 1);
+		//Material.AlbedoTexture = GD.Load<CompressedTexture2D>("res://textures/earth.jpg");
+		//Material.AlbedoTexture = ImageTexture.CreateFromImage(new Image()).GetImage().save;
+		
 		Mesh = new MeshInstance3D();
-		Mesh.Mesh = new SphereMesh();
-
+		Mesh.Mesh = new SphereMesh() {Material = Material};
+		
 		Body3D = new StaticBody3D();
 		Mesh.AddChild(Body3D);
 		Body3D.Owner = Mesh;
@@ -76,16 +92,23 @@ public class SpaceObject {
 		Body3D.AddChild(Collider);
 		Collider.Owner = Mesh;
 
+		Light = new OmniLight3D();
+		Light.OmniRange = 4096;
+		Light.OmniAttenuation = 2;
+		Mesh.AddChild(Light);
+		
 		AccelerationArrow = new MeshInstance3D();
 		AccelerationArrow.Mesh = new BoxMesh();
 		AccelerationArrow.MaterialOverride = new StandardMaterial3D() {
-			AlbedoColor = new(0x00_FF_00_00)
+			AlbedoColor = new(0x00_FF_00_00),
+			ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded
 		};
 
 		VelocityArrow = new MeshInstance3D();
 		VelocityArrow.Mesh = new BoxMesh();
 		VelocityArrow.MaterialOverride = new StandardMaterial3D() {
-			AlbedoColor = new(0xFF_FF_00_00)
+			AlbedoColor = new(0xFF_FF_00_00),
+			ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded
 		};
 
 		Mesh.AddChild(AccelerationArrow);
@@ -97,11 +120,35 @@ public class SpaceObject {
 	public void Sync(double scale) {
 		var pos = (SimBody.Position/scale).ToVector3F();
 		Mesh.Position = pos;
+
+		double V = SimBody.Mass / SimBody.Density;
+		double r = Math.Pow(V / (4d / 3d * Math.PI), 1d / 3d) / 1000;
+		double scaled_r = (float)(r / scale) * 100;
+		
+		SphereMesh mesh = (SphereMesh)Mesh.Mesh;
+		mesh.Radius = (float)scaled_r / 2;
+		mesh.Height = (float)scaled_r;
+
+		((SphereShape3D)Collider.Shape).Radius = (float)scaled_r / 2;
 		Body3D.Scale = Mesh.Scale;
 
+
+		if (SimBody.EnergyLumens > 0) {
+			//Material.EmissionEnabled = true;
+			//Material.Emission = new Color(1,1,1);
+			//Material.EmissionIntensity = 0.01f;//(float)(SimBody.EnergyLumens / Math.Pow(10, 17+Math.Log10(scale)));
+			Material.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
+			Light.LightIntensityLumens = (float)(SimBody.EnergyLumens / Math.Pow(10, 17+Math.Log10(scale)));
+			// 100000
+		} else {
+			//Material.EmissionEnabled = false;
+			Material.ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel;
+			Light.LightIntensityLumens = 0;
+		}
+		
 		var accel = SimBody.Acceleration.ToVector3F();
 		if (accel.Length() >= 0.0001) {
-			AccelerationArrow.Scale = new(0.05f, 0.05f, accel.Length()/(float)scale);
+			AccelerationArrow.Scale = new(0.05f, 0.05f, 1f); //new(0.05f, 0.05f, accel.Length()/(float)scale);
 			var point_accel = Mesh.Position + accel.Normalized()*(AccelerationArrow.Scale.Z/2+Mesh.Scale.Z/2);
 			AccelerationArrow.LookAtFromPosition(point_accel, point_accel+accel);
 		} else {
@@ -111,12 +158,24 @@ public class SpaceObject {
 
 		var vel = SimBody.Velocity.ToVector3F();
 		if (vel.Length() >= 0.0001) {
-			VelocityArrow.Scale = new(0.05f, 0.05f, vel.Length()/(float)scale);
+			VelocityArrow.Scale = new(0.05f, 0.05f, 1f);; //new(0.05f, 0.05f, vel.Length()/(float)scale);
 			var point_vel = Mesh.Position + vel.Normalized()*(VelocityArrow.Scale.Z/2+Mesh.Scale.Z/2);
 			VelocityArrow.LookAtFromPosition(point_vel, point_vel+vel);
 		} else {
 			VelocityArrow.Scale = new(0.05f, 0.05f, 0);
 		}
+	}
+
+	public void SetTexture(StoredImage img)
+	{
+		Image = img;
+		Material.AlbedoTexture = ImageTexture.CreateFromImage(img.Image);
+	}
+
+	public void RemoveTexture()
+	{
+		Image = null;
+		Material.AlbedoTexture = null;
 	}
 }
 
@@ -128,6 +187,9 @@ public struct Vector3D {
 		this.Y = Y;
 		this.Z = Z;
 	}
+
+	public static Vector3D FromVector3(Vector3 vec)
+		=> new(vec.X, vec.Y, vec.Z);
 
 	public Vector3 ToVector3F() {
 		return new Vector3((float)X,(float)Y,(float)Z);

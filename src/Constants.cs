@@ -10,6 +10,7 @@ public class Constants
 
 	public class Singletons {
 		public static NodePath SavesManager = "/root/SavesManager";
+		public static NodePath UIFocus = "/root/UiFocus";
 	}
 
 	public class KeyBindings {
@@ -29,5 +30,6 @@ public class Constants
 
 		public readonly static StringName OpenSpawnMenu = "open_spawn_menu";
 		public readonly static StringName ESC = "ESC";
+		public readonly static StringName EditMode = "edit_mode";
 	}
 }

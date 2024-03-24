@@ -42,7 +42,8 @@ public partial class SavesGui : Panel
 		workspace.SaveFile = savesManager.Files[itemList.GetSelectedItems().First()];
 
 		GetTree().Root.AddChild(workspace);
-		GetTree().Root.RemoveChild(GetTree().CurrentScene);
+		GetTree().CurrentScene.QueueFree();
+		GetTree().CurrentScene = workspace;
 	}
 
 	public void ShowDialog() {

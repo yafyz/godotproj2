@@ -19,8 +19,12 @@ public partial class Console : Control
 
 	Dictionary<string, Command> commands = new();
 
+	private UIFocus uiFocus;
+	
 	public override void _Ready()
 	{
+		uiFocus = GetNode<UIFocus>(Constants.Singletons.UIFocus);
+
 		Label = GetNode("Panel").GetNode<RichTextLabel>("RichTextLabel");
 		Label.BbcodeEnabled = true;
 		SetVisible(false);
@@ -32,6 +36,7 @@ public partial class Console : Control
 
 	public void SetVisible(bool visible) {
 		Visible = isOpen = visible;
+		uiFocus.ConsoleFocusOverride = visible;
 	}
 
 	public void AddCommand(string name, Delegate function, CommandArgument[] arguments = null) {
@@ -260,7 +265,8 @@ public partial class Console : Control
 	void HandleInput(Key keycode, bool caps) {
 		switch (keycode) {
 			case Key.Backspace:
-				input = input[..^1];
+				if (input.Length > 0)
+					input = input[..^1];
 				break;
 			case Key.Enter:
 				ExecuteCommand(input);

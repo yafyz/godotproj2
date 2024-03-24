@@ -37,6 +37,8 @@ public partial class MainMenu : Control
 		saveNameDialog_Close.Pressed += () => saveNameDialog_Panel.Visible = false;
 		saveNameDialog_Ok.Pressed += SaveNameDialogConfirmed;
 		saveNameDialog_Text.TextChanged += () => saveNameDialog_Ok.Disabled = string.IsNullOrEmpty(saveNameDialog_Text.Text);
+
+		//GetTree().ChangeSceneToFile(Constants.Scenes.Workspace);
 	}
 
 	private void OnExit() {

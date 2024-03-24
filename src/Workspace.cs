@@ -17,35 +17,57 @@ public partial class Workspace : Node3D
 	public double PhysicsRateRemainder = 0;
 	public double VisualScale = 1;
 
+	public EditGui EditGuiO;
+	public ObjectDrag ObjectDragger;
+	public bool EditMode = false;
+	public SpaceObject EditingSpaceObject = null;
+
 	public string SaveFile;
 
-	SavesManager savesManager;
+	private SavesManager savesManager;
+	private UIFocus uiFocus;
+
+	public TextureManager textureManager;
+
+	public Marker3D spawnMarker;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		savesManager = GetNode<SavesManager>(Constants.Singletons.SavesManager);
-
+		uiFocus = GetNode<UIFocus>(Constants.Singletons.UIFocus);
+		
 		simulation = new();
 		bodyMap = new();
 		bodiesContainer = GetNode<Node>("Bodies");
 		camera = GetNode<Camera>("Camera3D");
-
-		(GetNode<MeshInstance3D>("MeshInstance3D").Mesh as TextMesh)
-			.Text = "balls";
-
+		ObjectDragger = GetNode<ObjectDrag>("drag");
+		EditGuiO = GetNode<EditGui>("EditGui");
+		textureManager = GetNode<TextureManager>("TextureManager");
+		spawnMarker = camera.GetNode<Marker3D>("Marker3D");
+		
+		EditGuiO.ValueChanged += EditGuiValueChanged;
+		ObjectDragger.Dragging += DraggerDragging;
+		textureManager.ImageRemoved += OnImageRemoved;
+		
 		RegisterCommands();
 
 		if (SaveFile != null) {
 			savesManager.Load(this, SaveFile);
 		}
-	}
 
+			foreach ((var body, var node) in bodyMap) {
+				node.Sync(VisualScale);
+			}
+			
+			camera.SetToOrbit(bodyMap[earth].Body3D);
+		}
+	}
+	
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _PhysicsProcess(double delta)
 	{
-
-		if (!TimeFrozen) {
+		if (!TimeFrozen && !EditMode) {
 			var d = delta * Timescale + PhysicsRateRemainder;
 			PhysicsRateRemainder = d % PhysicsRate;
 
@@ -56,6 +78,8 @@ public partial class Workspace : Node3D
 			foreach ((var body, var node) in bodyMap) {
 				node.Sync(VisualScale);
 			}
+			
+			EditGuiO.Refresh();
 		}
 
 		/* Body selector for orbit cam */
@@ -66,23 +90,97 @@ public partial class Workspace : Node3D
 		if (space_state != null) {
 			var mpos = window.GetMousePosition();
 
+			if (EditGuiO.CheckMouse(mpos))
+				return;
+			
 			var ray_start = camera.ProjectRayOrigin(mpos);
 			var ray_end = ray_start + camera.ProjectRayNormal(mpos) * 1000;
 
 			var query = PhysicsRayQueryParameters3D.Create(ray_start, ray_end, 1);
 			var result = space_state.IntersectRay(query);
 
-			if (Input.IsActionJustPressed(Constants.KeyBindings.LMB)) {
+			if (!EditMode && Input.IsActionJustPressed(Constants.KeyBindings.LMB)) {
 				if (result.Any()) {
 					var obj = result["collider"].As<StaticBody3D>();
-					if (bodyMap.Any(kv => kv.Value.Body3D == obj)) {
+					var so = bodyMap
+						.Select(kv => kv.Value)
+						.FirstOrDefault(so => so.Body3D == obj);
+					
+					if (so != null) {
 						camera.SetToOrbit(obj.Owner as Node3D);
+						EditGuiO.ShowGui(so);
 					}
 				} else {
 					camera.SetToFreecam();
+					EditGuiO.HideGui();
+				}
+			} else if (Input.IsActionJustPressed(Constants.KeyBindings.EditMode) && !uiFocus.IsFocused) {
+				if (result.Any()) {
+					var obj = result["collider"].As<StaticBody3D>();
+					var so = bodyMap
+						.Select(kv => kv.Value)
+						.FirstOrDefault(x => x.Body3D == obj);
+					if (so != null) {
+						EnterEditMode(so);
+					} else {
+						QuitEditMode();
+					}
+				} else {
+					QuitEditMode();
+					EditGuiO.HideGui();
 				}
 			}
 		}
+
+		if (Input.IsActionJustPressed(Constants.KeyBindings.OpenSpawnMenu)) {
+			var body = AddBody(Vector3D.FromVector3(spawnMarker.GlobalPosition) * VisualScale, new Vector3D(), 1, 1, 0);
+			var so = bodyMap[body];
+			EnterEditMode(so);
+		}
+	}
+
+	public void OnImageRemoved(StoredImage image)
+	{
+		foreach ((_, var so) in bodyMap) {
+			if (so.Image == image) {
+				so.RemoveTexture();
+				if (EditGuiO.Object == so) {
+					EditGuiO.Refresh();
+				}
+			}
+		}
+	}
+	
+	public void EditGuiValueChanged()
+	{
+		EditGuiO.Object.Sync(VisualScale);
+	}
+
+	public void DraggerDragging()
+	{
+		EditingSpaceObject.SimBody.Position = Vector3D.FromVector3(EditingSpaceObject.Mesh.Position)*VisualScale;
+		EditGuiO.Refresh();
+	}
+	
+	public void EnterEditMode(SpaceObject so) {
+		if (EditMode)
+			QuitEditMode();
+		EditMode = true;
+		EditingSpaceObject = so;
+		ObjectDragger.SetDrag(so.Mesh);
+		camera.SetToFreecam();
+		EditGuiO.ShowGui(so);
+	}
+
+	public void QuitEditMode() {
+		if (!EditMode)
+			return;
+		var newPos = Vector3D.FromVector3(EditingSpaceObject.Mesh.Position)*VisualScale;
+		EditingSpaceObject.SimBody.Position = newPos;
+		EditMode = false;
+		EditingSpaceObject = null;
+		ObjectDragger.SetDrag(null);
+		EditGuiO.HideGui();
 	}
 
 	public void Save(string filename = null) {
@@ -187,13 +285,36 @@ public partial class Workspace : Node3D
 				)
 			}
 		);
+		
+		console.AddCommand("addtexture", (string name) => {
+				var img = textureManager.Images.FirstOrDefault(x => x.Name == name);
+				if (img == null || EditingSpaceObject == null) return;
+				EditingSpaceObject.SetTexture(img);
+			}, [new("image_name", typeof(string), null, ((cmd, argv, argi) => {
+					if (!EditMode)
+						return new Console.HinterResult(Console.HinterInputResult.Error, ["you must be in edit mode"]);
+					var matches = textureManager.Images
+						.Where(x => x.Name.StartsWith(argv[argi]))
+						.Select(x => x.Name[argv[argi].Length..]);
+					return matches.Any()
+						? new Console.HinterResult(Console.HinterInputResult.Hint, matches)
+						: new Console.HinterResult(Console.HinterInputResult.Error, ["no texture with such name found"]);
+				}
+		))]);
+		
+		console.AddCommand("removetexture", () => {
+			if (EditingSpaceObject == null) return;
+			EditingSpaceObject.RemoveTexture();
+		});
 	}
 
-	public Simulation.Body AddBody(Vector3D position, Vector3D velocity, double mass) {
+	public Simulation.Body AddBody(Vector3D position, Vector3D velocity, double mass, double density, double energy) {
 		Simulation.Body body = new Simulation.Body() {
 			Position = position,
 			Velocity = velocity,
-			Mass = mass
+			Mass = mass,
+			Density = density,
+			EnergyLumens = energy
 		};
 
 		AddBody(body);

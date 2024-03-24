@@ -55,4 +55,12 @@ public class Writer {
     public void WriteBool(bool value) {
         stream.WriteByte(value ? (byte)1 : (byte)0);
     }
+
+    public void WriteImage(StoredImage img)
+    {
+        WriteString(img.Name);
+        WriteInt32((int)img.Format);
+        WriteInt32(img.RawData.Length);
+        WriteBytes(img.RawData);
+    }
 }
