@@ -1,8 +1,51 @@
-[gd_scene load_steps=4 format=3 uid="uid://h871vxnchtfe"]
+[gd_scene load_steps=18 format=3 uid="uid://h871vxnchtfe"]
 
 [ext_resource type="Script" path="res://src/gui/MainMenu.cs" id="1_24b4j"]
 [ext_resource type="PackedScene" uid="uid://c555mcfr0grv0" path="res://console.tscn" id="2_ydwnj"]
 [ext_resource type="Script" path="res://src/gui/SavesGui.cs" id="3_d5v86"]
+[ext_resource type="PackedScene" uid="uid://c5akv15e1f11n" path="res://settings.tscn" id="3_m0jmt"]
+[ext_resource type="Texture2D" uid="uid://d3f8j6t1rqsgh" path="res://textures/8k_earth_daymap.jpg" id="4_gkpcl"]
+[ext_resource type="Texture2D" uid="uid://dbi3vxwuaib3j" path="res://textures/8k_sun.jpg" id="5_jxne6"]
+[ext_resource type="Script" path="res://src/misc/SpinScript.cs" id="6_osk3b"]
+
+[sub_resource type="Theme" id="Theme_p3nqc"]
+default_font_size = 50
+
+[sub_resource type="Theme" id="Theme_22r00"]
+default_font_size = 37
+
+[sub_resource type="Theme" id="Theme_8ysgb"]
+default_font_size = 30
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1lxb2"]
+albedo_texture = ExtResource("4_gkpcl")
+
+[sub_resource type="SphereMesh" id="SphereMesh_iuvo7"]
+material = SubResource("StandardMaterial3D_1lxb2")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sttm4"]
+shading_mode = 0
+albedo_texture = ExtResource("5_jxne6")
+
+[sub_resource type="SphereMesh" id="SphereMesh_1v8xp"]
+material = SubResource("StandardMaterial3D_sttm4")
+radius = 10.0
+height = 20.0
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h5lto"]
+sky_top_color = Color(0, 0, 0, 1)
+sky_horizon_color = Color(0, 0, 0, 1)
+ground_bottom_color = Color(0, 0, 0, 1)
+ground_horizon_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Sky" id="Sky_nqetv"]
+sky_material = SubResource("ProceduralSkyMaterial_h5lto")
+
+[sub_resource type="Environment" id="Environment_iv18i"]
+background_mode = 2
+background_intensity = 0.0
+sky = SubResource("Sky_nqetv")
+glow_enabled = true
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -19,32 +62,57 @@ offset_left = 63.0
 offset_top = 27.0
 offset_right = 103.0
 offset_bottom = 53.0
-text = "ass"
+theme = SubResource("Theme_p3nqc")
+text = "Space simulation thingamabob"
 
-[node name="Exit" type="Button" parent="."]
-layout_mode = 0
-offset_left = 57.0
-offset_top = 357.0
-offset_right = 438.0
-offset_bottom = 511.0
-text = "exit"
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 72.0
+offset_top = -182.5
+offset_right = 383.0
+offset_bottom = 182.5
+grow_vertical = 2
+theme = SubResource("Theme_22r00")
+alignment = 1
 
-[node name="NewWorkspace" type="Button" parent="."]
-layout_mode = 0
-offset_left = 57.0
-offset_top = 86.0
-offset_right = 483.0
-offset_bottom = 186.0
-text = "new workspace"
+[node name="NewWorkspace" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "New Workspace"
 
-[node name="LoadWorkspace" type="Button" parent="."]
-layout_mode = 0
-offset_left = 59.0
-offset_top = 211.0
-offset_right = 469.0
-offset_bottom = 304.0
-text = "load workspace
-"
+[node name="LoadWorkspace" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Load Workspace"
+
+[node name="spacer" type="Button" parent="VBoxContainer"]
+visibility_layer = 0
+layout_mode = 2
+text = "spacer"
+
+[node name="Settings" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Settings"
+
+[node name="spacer2" type="Button" parent="VBoxContainer"]
+visibility_layer = 0
+layout_mode = 2
+text = "spacer"
+
+[node name="Exit" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme = SubResource("Theme_8ysgb")
+text = "Exit"
+
+[node name="Overlay" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Saves" type="Panel" parent="."]
 visible = false
@@ -105,37 +173,71 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -190.0
-offset_top = -64.0
-offset_right = 190.0
-offset_bottom = 64.0
+offset_left = -186.0
+offset_top = -60.0
+offset_right = 186.0
+offset_bottom = 53.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Filename" type="TextEdit" parent="SaveNameDialog"]
+[node name="Filename" type="LineEdit" parent="SaveNameDialog"]
 layout_mode = 0
-offset_left = 16.0
-offset_top = 14.0
-offset_right = 359.0
-offset_bottom = 59.0
-placeholder_text = "file name"
+offset_left = 24.0
+offset_top = 22.0
+offset_right = 354.0
+offset_bottom = 53.0
+placeholder_text = "filename"
 
-[node name="Ok" type="Button" parent="SaveNameDialog"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SaveNameDialog"]
 layout_mode = 0
-offset_left = 51.0
-offset_top = 75.0
-offset_right = 118.0
-offset_bottom = 106.0
+offset_left = 26.0
+offset_top = 66.0
+offset_right = 352.0
+offset_bottom = 97.0
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Ok" type="Button" parent="SaveNameDialog/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "ok"
 
-[node name="Close" type="Button" parent="SaveNameDialog"]
-layout_mode = 0
-offset_left = 237.0
-offset_top = 75.0
-offset_right = 304.0
-offset_bottom = 106.0
+[node name="Close" type="Button" parent="SaveNameDialog/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "close"
+
+[node name="Settings" parent="." instance=ExtResource("3_m0jmt")]
+visible = false
+layout_mode = 1
 
 [node name="console" parent="." instance=ExtResource("2_ydwnj")]
 visible = false
 layout_mode = 1
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.426008, 0.0209325, 0.904477, 0.0355464, 0.998573, -0.0398525, -0.904021, 0.0491284, 0.424656, 4.02249, 3.79796, -0.44562)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0525009, 3.36641, -2.75128)
+mesh = SubResource("SphereMesh_iuvo7")
+skeleton = NodePath("../Camera3D")
+script = ExtResource("6_osk3b")
+FullRotationTimeSeconds = 60.0
+SpinMult = -1.0
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.61011, 0.0712576, -38.5005)
+mesh = SubResource("SphereMesh_1v8xp")
+skeleton = NodePath("../Camera3D")
+script = ExtResource("6_osk3b")
+FullRotationTimeSeconds = 480.0
+SpinMult = -1.0
+
+[node name="OmniLight3D" type="OmniLight3D" parent="MeshInstance3D2"]
+light_intensity_lumens = 100000.0
+omni_range = 4096.0
+omni_attenuation = 2.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_iv18i")

@@ -2,12 +2,15 @@ using Godot;
 using System;
 using System.Linq;
 
-public partial class EditGui : Panel
+public partial class EditGui : PanelContainer	
 {
 	private Workspace workspace;
+
+	private VBoxContainer Container;
 	
 	private Vector3DControl PositionControl;
-	private Vector3DControl VelocityControl;
+	//private Vector3DControl VelocityControl;
+	private VelocityControl VelocityControl_;
 
 	private DoubleInput MassControl;
 	private DoubleInput DensityControl;
@@ -20,6 +23,8 @@ public partial class EditGui : Panel
 	private Window TextureSelectWindow;
 	private ItemList TextureSelectList;
 	private Button TextureSelectButton;
+
+	private LineEdit _nameInput;
 	
 	public SpaceObject Object;
 	public event Action ValueChanged;
@@ -28,27 +33,32 @@ public partial class EditGui : Panel
 	public override void _Ready()
 	{
 		workspace = GetParent<Workspace>();
-		
-		PositionControl = GetNode<Vector3DControl>("PositionControl/Position");
-		VelocityControl = GetNode<Vector3DControl>("VelocityControl/Velocity");
-		
-		MassControl = GetNode<DoubleInput>("MassControl/Mass");
-		DensityControl = GetNode<DoubleInput>("DensityControl/Density");
-		EnergyControl = GetNode<DoubleInput>("EnergyControl/Energy");
 
-		CurrentTexture = GetNode<LineEdit>("TextureControl/CurrentTexture");
-		SetTexture = GetNode<Button>("TextureControl/SetTexture");
-		RemoveTexture = GetNode<Button>("TextureControl/RemoveTexture");
+		Container = GetNode<VBoxContainer>("VBoxContainer");
+					
+		PositionControl = Container.GetNode<Vector3DControl>("PositionControl/Position");
+		//VelocityControl = Container.GetNode<Vector3DControl>("VelocityControl/Velocity");
+		VelocityControl_ = Container.GetNode<VelocityControl>("VelocityControl");
+		
+		MassControl = Container.GetNode<DoubleInput>("MassControl/Mass");
+		DensityControl = Container.GetNode<DoubleInput>("DensityControl/Density");
+		EnergyControl = Container.GetNode<DoubleInput>("EnergyControl/Energy");
+
+		CurrentTexture = Container.GetNode<LineEdit>("TextureControl/CurrentTexture");
+		SetTexture = Container.GetNode<Button>("TextureControl/SetTexture");
+		RemoveTexture = Container.GetNode<Button>("TextureControl/RemoveTexture");
 		
 		TextureSelectWindow = GetNode<Window>("TextureSelect");
 		TextureSelectList = GetNode<ItemList>("TextureSelect/TextureList");
 		TextureSelectButton = GetNode<Button>("TextureSelect/SelectTexture");
 
+		_nameInput = GetNode<LineEdit>("VBoxContainer/NameControl/LineEdit");
+		
 		TextureSelectWindow.CloseRequested += TextureSelectWindowCloseRequested;
 		TextureSelectButton.Pressed += TextureSelectSelected;
 			
 		PositionControl.ValueChanged += pos => Object.SimBody.Position = pos;
-		VelocityControl.ValueChanged += vel => Object.SimBody.Velocity = vel;
+		VelocityControl_.ValueChanged += vel => Object.SimBody.Velocity = vel;
 		MassControl.ValueChanged += mass => Object.SimBody.Mass = mass;
 		DensityControl.ValueChanged += dens => Object.SimBody.Density = dens;
 		EnergyControl.ValueChanged += lum => Object.SimBody.EnergyLumens = lum;
@@ -57,17 +67,24 @@ public partial class EditGui : Panel
 		SetTexture.Pressed += SetTextureClicked;
 		
 		PositionControl.ValueChanged += _ => ValueChanged?.Invoke();
-		VelocityControl.ValueChanged += _ => ValueChanged?.Invoke();
+		VelocityControl_.ValueChanged += _ => ValueChanged?.Invoke();
 		MassControl.ValueChanged += _ => ValueChanged?.Invoke();
 		DensityControl.ValueChanged += _ => ValueChanged?.Invoke();
 		EnergyControl.ValueChanged += _ => ValueChanged?.Invoke();
+		
+		_nameInput.TextChanged += NameInputOnTextChanged;
 		
 		if (Object != null)
 			ShowGui(Object);
 		else
 			HideGui();
 	}
-	
+
+	private void NameInputOnTextChanged(string newtext)
+	{
+		Object.SimBody.Name = newtext;
+	}
+
 	private void RemoveTextureClicked()
 	{
 		Object.RemoveTexture();
@@ -113,7 +130,7 @@ public partial class EditGui : Panel
 			return;
 		
 		PositionControl.SetValue(Object.SimBody.Position, false);
-		VelocityControl.SetValue(Object.SimBody.Velocity, false);
+		VelocityControl_.SetValue(Object.SimBody.Velocity, false);
 		MassControl.SetValue(Object.SimBody.Mass, false);
 		DensityControl.SetValue(Object.SimBody.Density, false);
 		EnergyControl.SetValue(Object.SimBody.EnergyLumens, false);
@@ -124,6 +141,7 @@ public partial class EditGui : Panel
 	public void ShowGui(SpaceObject obj)
 	{
 		Object = obj;
+		_nameInput.Text = obj.SimBody.Name;
 		Visible = true;
 		Refresh();
 	}
@@ -136,8 +154,8 @@ public partial class EditGui : Panel
 	
 	public bool CheckMouse(Vector2 point)
 	{
-		return GetGlobalRect().HasPoint(point)
-		       || TextureSelectWindow.Visible
-		       && TextureSelectWindow.GetVisibleRect().HasPoint(point);
+		return Visible
+		       && GetGlobalRect().HasPoint(point)
+		       || WindowHelper.WindowHasMouse(TextureSelectWindow, point);
 	}
 }

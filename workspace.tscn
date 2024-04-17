@@ -1,16 +1,27 @@
-[gd_scene load_steps=18 format=3 uid="uid://hi6nwfd1n8j0"]
+[gd_scene load_steps=36 format=3 uid="uid://hi6nwfd1n8j0"]
 
 [ext_resource type="Script" path="res://src/Workspace.cs" id="1_1dj6f"]
 [ext_resource type="Script" path="res://src/Camera.cs" id="2_b8i1c"]
 [ext_resource type="PackedScene" uid="uid://c555mcfr0grv0" path="res://console.tscn" id="2_gaktr"]
-[ext_resource type="Script" path="res://src/gui/SpawnerGUI.cs" id="2_q6x6o"]
+[ext_resource type="Script" path="res://src/gui/CameraGizmo.cs" id="3_0abnu"]
+[ext_resource type="Script" path="res://src/gui/PausedText.cs" id="3_ppulm"]
 [ext_resource type="Script" path="res://src/ObjectDrag.cs" id="4_fjqf7"]
 [ext_resource type="Script" path="res://src/gui/EscMenu.cs" id="4_sde3u"]
 [ext_resource type="PackedScene" uid="uid://upfujkmlpkjd" path="res://src/gui/Vector3DControl.tscn" id="7_hh1gj"]
 [ext_resource type="Script" path="res://src/gui/EditGui.cs" id="7_hmlrg"]
 [ext_resource type="Script" path="res://src/gui/DoubleInput.cs" id="8_tf113"]
+[ext_resource type="Script" path="res://src/gui/VelocityControl.cs" id="9_lq1yd"]
+[ext_resource type="PackedScene" uid="uid://c3eyfoax68v67" path="res://src/gui/DoubleSlider.tscn" id="10_6meyr"]
+[ext_resource type="Script" path="res://src/gui/Vector3DAngular.cs" id="10_sg4u6"]
 [ext_resource type="Script" path="res://src/WorkspaceInfo.cs" id="10_y5wxl"]
+[ext_resource type="Script" path="res://src/misc/SpinScript.cs" id="11_ga0w2"]
 [ext_resource type="Script" path="res://src/gui/TextureManager.cs" id="11_l4e7h"]
+[ext_resource type="PackedScene" uid="uid://c5akv15e1f11n" path="res://settings.tscn" id="11_rt570"]
+[ext_resource type="Script" path="res://src/gui/JumpToObject.cs" id="14_a0py8"]
+[ext_resource type="Script" path="res://src/gui/settings/Timescale.cs" id="17_7fj2t"]
+[ext_resource type="Script" path="res://src/gui/settings/PhysicsRate.cs" id="18_cs7rt"]
+[ext_resource type="Script" path="res://src/gui/settings/VisualScale.cs" id="19_w6o62"]
+[ext_resource type="Script" path="res://src/gui/LoadError.cs" id="22_xwnl2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_pnl15"]
 sky_top_color = Color(0, 0, 0, 1)
@@ -18,13 +29,13 @@ sky_horizon_color = Color(0, 0, 0, 1)
 ground_bottom_color = Color(0, 0, 0, 1)
 ground_horizon_color = Color(0, 0, 0, 1)
 
-[sub_resource type="Sky" id="Sky_nqetv"]
+[sub_resource type="Sky" id="Sky_1t01b"]
 sky_material = SubResource("ProceduralSkyMaterial_pnl15")
 
 [sub_resource type="Environment" id="Environment_74jtx"]
 background_mode = 2
 background_intensity = 0.0
-sky = SubResource("Sky_nqetv")
+sky = SubResource("Sky_1t01b")
 glow_enabled = true
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f5ea5"]
@@ -35,6 +46,42 @@ bg_color = Color(0, 1, 0, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e6emn"]
 bg_color = Color(0, 0, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lvblk"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lqcfe"]
+bg_color = Color(0.8, 0.8, 0.8, 0.392157)
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+border_color = Color(0.8, 0.8, 0.8, 0.392157)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bm72j"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.6, 0.6, 0.6, 0.498039)
+border_color = Color(0.8, 0.8, 0.8, 0.498039)
+corner_radius_bottom_right = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_l21wy"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u6bxx"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_huxjr"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_53p26"]
 
 [node name="Workspace" type="Node3D"]
 script = ExtResource("1_1dj6f")
@@ -49,133 +96,51 @@ script = ExtResource("2_b8i1c")
 [node name="Marker3D" type="Marker3D" parent="Camera3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.4741)
 
-[node name="Control" type="Control" parent="."]
+[node name="PausedText" type="Control" parent="."]
 visible = false
 layout_mode = 3
-anchors_preset = 2
-anchor_top = 1.0
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-grow_vertical = 0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_ppulm")
 
-[node name="SpawnerGUI" type="Panel" parent="Control"]
-visible = false
+[node name="Label" type="Label" parent="PausedText"]
 layout_mode = 1
-anchors_preset = 2
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -23.5
+offset_right = 23.5
+offset_bottom = 23.0
+grow_horizontal = 2
+text = "Simulation Paused"
+
+[node name="CameraGizmo" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 3
+anchor_left = 1.0
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -195.0
-offset_right = 326.0
+offset_left = -100.0
+offset_top = -100.0
+grow_horizontal = 0
 grow_vertical = 0
-script = ExtResource("2_q6x6o")
+script = ExtResource("3_0abnu")
 
-[node name="Position" type="Panel" parent="Control/SpawnerGUI"]
-layout_mode = 0
-offset_left = 15.0
-offset_top = 15.0
-offset_right = 311.0
-offset_bottom = 55.0
+[node name="LineX" type="Line2D" parent="CameraGizmo"]
+width = 4.0
+default_color = Color(1, 0, 0, 1)
 
-[node name="Label" type="Label" parent="Control/SpawnerGUI/Position"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 7.0
-offset_right = 73.0
-offset_bottom = 33.0
-text = "Position"
+[node name="LineZ" type="Line2D" parent="CameraGizmo"]
+width = 4.0
+default_color = Color(0, 0, 1, 1)
 
-[node name="X" type="LineEdit" parent="Control/SpawnerGUI/Position"]
-layout_mode = 0
-offset_left = 80.0
-offset_top = 5.0
-offset_right = 147.063
-offset_bottom = 36.0
-alignment = 1
-
-[node name="Y" type="LineEdit" parent="Control/SpawnerGUI/Position"]
-layout_mode = 0
-offset_left = 152.0
-offset_top = 5.0
-offset_right = 219.063
-offset_bottom = 36.0
-alignment = 1
-
-[node name="Z" type="LineEdit" parent="Control/SpawnerGUI/Position"]
-layout_mode = 0
-offset_left = 224.0
-offset_top = 5.0
-offset_right = 291.063
-offset_bottom = 36.0
-alignment = 1
-
-[node name="Velocity" type="Panel" parent="Control/SpawnerGUI"]
-layout_mode = 0
-offset_left = 15.0
-offset_top = 59.0
-offset_right = 311.0
-offset_bottom = 99.0
-
-[node name="Label" type="Label" parent="Control/SpawnerGUI/Velocity"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 7.0
-offset_right = 73.0
-offset_bottom = 33.0
-text = "Velocity"
-
-[node name="X" type="LineEdit" parent="Control/SpawnerGUI/Velocity"]
-layout_mode = 0
-offset_left = 80.0
-offset_top = 5.0
-offset_right = 147.063
-offset_bottom = 36.0
-alignment = 1
-
-[node name="Y" type="LineEdit" parent="Control/SpawnerGUI/Velocity"]
-layout_mode = 0
-offset_left = 152.0
-offset_top = 5.0
-offset_right = 219.063
-offset_bottom = 36.0
-alignment = 1
-
-[node name="Z" type="LineEdit" parent="Control/SpawnerGUI/Velocity"]
-layout_mode = 0
-offset_left = 224.0
-offset_top = 5.0
-offset_right = 291.063
-offset_bottom = 36.0
-alignment = 1
-
-[node name="Mass" type="Panel" parent="Control/SpawnerGUI"]
-layout_mode = 0
-offset_left = 16.0
-offset_top = 103.0
-offset_right = 312.0
-offset_bottom = 143.0
-
-[node name="Label" type="Label" parent="Control/SpawnerGUI/Mass"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 7.0
-offset_right = 73.0
-offset_bottom = 33.0
-text = "Mass"
-
-[node name="Mass" type="LineEdit" parent="Control/SpawnerGUI/Mass"]
-layout_mode = 0
-offset_left = 80.0
-offset_top = 5.0
-offset_right = 288.0
-offset_bottom = 36.0
-alignment = 1
-
-[node name="Spawn" type="Button" parent="Control/SpawnerGUI"]
-layout_mode = 0
-offset_left = 111.0
-offset_top = 149.0
-offset_right = 219.0
-offset_bottom = 183.0
-text = "Spawn"
+[node name="LineY" type="Line2D" parent="CameraGizmo"]
+width = 4.0
+default_color = Color(0, 1, 0, 1)
 
 [node name="drag" type="Control" parent="."]
 layout_mode = 3
@@ -224,6 +189,14 @@ default_color = Color(0, 0, 1, 1)
 
 [node name="Bodies" type="Node" parent="."]
 
+[node name="Panel" type="Panel" parent="."]
+visible = false
+offset_left = 481.0
+offset_top = 246.0
+offset_right = 673.0
+offset_bottom = 399.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_lvblk")
+
 [node name="Menu" type="Control" parent="."]
 visible = false
 layout_mode = 3
@@ -234,207 +207,218 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4_sde3u")
 
-[node name="Panel" type="Panel" parent="Menu"]
+[node name="PanelContainer" type="PanelContainer" parent="Menu"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -162.0
-offset_top = -132.0
-offset_right = 158.0
-offset_bottom = 156.0
+offset_left = -69.5
+offset_top = -68.0
+offset_right = 69.5
+offset_bottom = 68.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_lqcfe")
 
-[node name="TextureManager" type="Button" parent="Menu/Panel"]
-offset_left = 55.0
-offset_top = 23.0
-offset_right = 269.0
-offset_bottom = 73.0
-text = "texture manager"
+[node name="VBoxContainer" type="VBoxContainer" parent="Menu/PanelContainer"]
+layout_mode = 2
 
-[node name="Save" type="Button" parent="Menu/Panel"]
-layout_mode = 0
-offset_left = 55.0
-offset_top = 82.0
-offset_right = 269.0
-offset_bottom = 132.0
-text = "save"
+[node name="TextureManager" type="Button" parent="Menu/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Texture Manager"
 
-[node name="Menu" type="Button" parent="Menu/Panel"]
-layout_mode = 0
-offset_left = 55.0
-offset_top = 148.0
-offset_right = 269.0
-offset_bottom = 198.0
-text = "menu"
+[node name="Save" type="Button" parent="Menu/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Save"
 
-[node name="Exit" type="Button" parent="Menu/Panel"]
-layout_mode = 0
-offset_left = 55.0
-offset_top = 210.0
-offset_right = 269.0
-offset_bottom = 260.0
-text = "exit"
+[node name="Settings" type="Button" parent="Menu/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Settings"
+
+[node name="Menu" type="Button" parent="Menu/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Menu"
+
+[node name="Exit" type="Button" parent="Menu/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Exit"
 
 [node name="console" parent="." instance=ExtResource("2_gaktr")]
 visible = false
 
-[node name="EditGui" type="Panel" parent="."]
-offset_right = 207.0
-offset_bottom = 423.0
+[node name="EditGui" type="PanelContainer" parent="."]
+offset_right = 214.0
+offset_bottom = 388.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_bm72j")
 script = ExtResource("7_hmlrg")
 
-[node name="PositionControl" type="Control" parent="EditGui"]
-anchors_preset = 0
-offset_top = 1.0
-offset_right = 40.0
-offset_bottom = 41.0
+[node name="VBoxContainer" type="VBoxContainer" parent="EditGui"]
+layout_mode = 2
 
-[node name="PositionLabel" type="Label" parent="EditGui/PositionControl"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = -2.0
-offset_right = 65.0
-offset_bottom = 24.0
-text = "Position
-"
+[node name="NameControl" type="HBoxContainer" parent="EditGui/VBoxContainer"]
+layout_mode = 2
 
-[node name="Position" parent="EditGui/PositionControl" instance=ExtResource("7_hh1gj")]
-offset_left = 2.0
-offset_top = 21.0
-offset_right = 204.0
-offset_bottom = 61.0
-grow_horizontal = 1
-grow_vertical = 1
+[node name="Label" type="Label" parent="EditGui/VBoxContainer/NameControl"]
+layout_mode = 2
+text = "Name"
 
-[node name="VelocityControl" type="Control" parent="EditGui"]
-anchors_preset = 0
-offset_left = 1.0
-offset_top = 60.0
-offset_right = 41.0
-offset_bottom = 100.0
+[node name="LineEdit" type="LineEdit" parent="EditGui/VBoxContainer/NameControl"]
+layout_mode = 2
+size_flags_horizontal = 3
 
-[node name="VelocityLabel" type="Label" parent="EditGui/VelocityControl"]
-layout_mode = 0
-offset_top = 3.0
-offset_right = 61.0
-offset_bottom = 29.0
-text = "Velocity"
+[node name="HSeparator6" type="HSeparator" parent="EditGui/VBoxContainer"]
+layout_mode = 2
 
-[node name="Velocity" parent="EditGui/VelocityControl" instance=ExtResource("7_hh1gj")]
-offset_left = 1.0
-offset_top = 27.0
-offset_right = 203.0
-offset_bottom = 67.0
-grow_horizontal = 1
-grow_vertical = 1
+[node name="PositionControl" type="VBoxContainer" parent="EditGui/VBoxContainer"]
+layout_mode = 2
 
-[node name="MassControl" type="Control" parent="EditGui"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 1.0
-offset_top = 126.0
-offset_right = 41.0
-offset_bottom = 166.0
+[node name="Label" type="Label" parent="EditGui/VBoxContainer/PositionControl"]
+layout_mode = 2
+text = "Position"
 
-[node name="MassLabel" type="Label" parent="EditGui/MassControl"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-text = "Mass"
+[node name="Position" parent="EditGui/VBoxContainer/PositionControl" instance=ExtResource("7_hh1gj")]
+layout_mode = 2
 
-[node name="Mass" type="LineEdit" parent="EditGui/MassControl"]
-layout_mode = 0
-offset_left = 1.0
-offset_top = 22.0
-offset_right = 202.0
-offset_bottom = 53.0
+[node name="HSeparator" type="HSeparator" parent="EditGui/VBoxContainer"]
+layout_mode = 2
+
+[node name="VelocityControl" type="VBoxContainer" parent="EditGui/VBoxContainer"]
+layout_mode = 2
+script = ExtResource("9_lq1yd")
+
+[node name="Toggle" type="HBoxContainer" parent="EditGui/VBoxContainer/VelocityControl"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EditGui/VBoxContainer/VelocityControl/Toggle"]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "Vector"
+
+[node name="CheckButton" type="CheckButton" parent="EditGui/VBoxContainer/VelocityControl/Toggle"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="EditGui/VBoxContainer/VelocityControl/Toggle"]
+layout_mode = 2
+size_flags_horizontal = 2
+text = "Angular"
+
+[node name="Vector" type="VBoxContainer" parent="EditGui/VBoxContainer/VelocityControl"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EditGui/VBoxContainer/VelocityControl/Vector"]
+layout_mode = 2
+text = "Velocity (m/s)"
+
+[node name="Velocity" parent="EditGui/VBoxContainer/VelocityControl/Vector" instance=ExtResource("7_hh1gj")]
+layout_mode = 2
+
+[node name="Angular" type="VBoxContainer" parent="EditGui/VBoxContainer/VelocityControl"]
+layout_mode = 2
+script = ExtResource("10_sg4u6")
+
+[node name="Velocity" type="HBoxContainer" parent="EditGui/VBoxContainer/VelocityControl/Angular"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EditGui/VBoxContainer/VelocityControl/Angular/Velocity"]
+layout_mode = 2
+text = "Velocity:"
+
+[node name="LineEdit" type="LineEdit" parent="EditGui/VBoxContainer/VelocityControl/Angular/Velocity"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("8_tf113")
+
+[node name="Yaw" type="HBoxContainer" parent="EditGui/VBoxContainer/VelocityControl/Angular"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EditGui/VBoxContainer/VelocityControl/Angular/Yaw"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "Yaw:"
+
+[node name="DoubleSlider" parent="EditGui/VBoxContainer/VelocityControl/Angular/Yaw" instance=ExtResource("10_6meyr")]
+layout_mode = 2
+
+[node name="Pitch" type="HBoxContainer" parent="EditGui/VBoxContainer/VelocityControl/Angular"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EditGui/VBoxContainer/VelocityControl/Angular/Pitch"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "Pitch:"
+
+[node name="DoubleSlider" parent="EditGui/VBoxContainer/VelocityControl/Angular/Pitch" instance=ExtResource("10_6meyr")]
+layout_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="EditGui/VBoxContainer"]
+layout_mode = 2
+
+[node name="MassControl" type="VBoxContainer" parent="EditGui/VBoxContainer"]
+layout_mode = 2
+
+[node name="MassLabel" type="Label" parent="EditGui/VBoxContainer/MassControl"]
+layout_mode = 2
+text = "Mass (kg)"
+
+[node name="Mass" type="LineEdit" parent="EditGui/VBoxContainer/MassControl"]
+layout_mode = 2
 text = "1"
 script = ExtResource("8_tf113")
 
-[node name="DensityControl" type="Control" parent="EditGui"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 2.0
-offset_top = 183.0
-offset_right = 42.0
-offset_bottom = 223.0
+[node name="HSeparator3" type="HSeparator" parent="EditGui/VBoxContainer"]
+layout_mode = 2
 
-[node name="DensityLabel" type="Label" parent="EditGui/DensityControl"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-text = "Density"
+[node name="DensityControl" type="VBoxContainer" parent="EditGui/VBoxContainer"]
+layout_mode = 2
 
-[node name="Density" type="LineEdit" parent="EditGui/DensityControl"]
-layout_mode = 0
-offset_left = 1.0
-offset_top = 22.0
-offset_right = 202.0
-offset_bottom = 53.0
+[node name="DensityLabel" type="Label" parent="EditGui/VBoxContainer/DensityControl"]
+layout_mode = 2
+text = "Density (kg/m^3)"
+
+[node name="Density" type="LineEdit" parent="EditGui/VBoxContainer/DensityControl"]
+layout_mode = 2
 text = "1"
 script = ExtResource("8_tf113")
 
-[node name="EnergyControl" type="Control" parent="EditGui"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 2.0
-offset_top = 236.0
-offset_right = 42.0
-offset_bottom = 276.0
+[node name="HSeparator4" type="HSeparator" parent="EditGui/VBoxContainer"]
+layout_mode = 2
 
-[node name="EnergyLabel" type="Label" parent="EditGui/EnergyControl"]
-layout_mode = 0
-offset_right = 53.0
-offset_bottom = 26.0
-text = "Energy
+[node name="EnergyControl" type="VBoxContainer" parent="EditGui/VBoxContainer"]
+layout_mode = 2
+
+[node name="EnergyLabel" type="Label" parent="EditGui/VBoxContainer/EnergyControl"]
+layout_mode = 2
+text = "Energy (lumens)
 "
 
-[node name="Energy" type="LineEdit" parent="EditGui/EnergyControl"]
-layout_mode = 0
-offset_top = 26.0
-offset_right = 201.0
-offset_bottom = 57.0
+[node name="Energy" type="LineEdit" parent="EditGui/VBoxContainer/EnergyControl"]
+layout_mode = 2
 text = "0"
 script = ExtResource("8_tf113")
 
-[node name="TextureControl" type="Control" parent="EditGui"]
-anchors_preset = 0
-offset_top = 297.0
-offset_right = 40.0
-offset_bottom = 337.0
+[node name="HSeparator5" type="HSeparator" parent="EditGui/VBoxContainer"]
+layout_mode = 2
 
-[node name="Label" type="Label" parent="EditGui/TextureControl"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+[node name="TextureControl" type="VBoxContainer" parent="EditGui/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="EditGui/VBoxContainer/TextureControl"]
+layout_mode = 2
 text = "Current Texture"
 
-[node name="CurrentTexture" type="LineEdit" parent="EditGui/TextureControl"]
-layout_mode = 0
-offset_top = 24.0
-offset_right = 203.0
-offset_bottom = 55.0
+[node name="CurrentTexture" type="LineEdit" parent="EditGui/VBoxContainer/TextureControl"]
+layout_mode = 2
 text = "None"
 editable = false
 
-[node name="SetTexture" type="Button" parent="EditGui/TextureControl"]
-layout_mode = 0
-offset_left = 1.0
-offset_top = 58.0
-offset_right = 98.0
-offset_bottom = 89.0
+[node name="SetTexture" type="Button" parent="EditGui/VBoxContainer/TextureControl"]
+layout_mode = 2
 text = "Set Texture"
 
-[node name="RemoveTexture" type="Button" parent="EditGui/TextureControl"]
-layout_mode = 0
-offset_left = 1.0
-offset_top = 92.0
-offset_right = 136.0
-offset_bottom = 123.0
+[node name="RemoveTexture" type="Button" parent="EditGui/VBoxContainer/TextureControl"]
+layout_mode = 2
 text = "Remove Texture"
 
 [node name="TextureSelect" type="Window" parent="EditGui"]
@@ -460,6 +444,33 @@ offset_right = 27.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "Select"
+
+[node name="JumpToObject" type="Window" parent="."]
+title = "Jump to object"
+size = Vector2i(250, 250)
+visible = false
+min_size = Vector2i(250, 250)
+script = ExtResource("14_a0py8")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="JumpToObject"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="JumpToObject/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ItemList" type="ItemList" parent="JumpToObject/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Button" type="Button" parent="JumpToObject/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+text = "Jump"
 
 [node name="WorkspaceInfo" type="RichTextLabel" parent="."]
 anchors_preset = 1
@@ -517,6 +528,26 @@ offset_top = 29.0
 grow_horizontal = 0
 grow_vertical = 2
 
+[node name="SubViewportContainer" type="SubViewportContainer" parent="TextureManager/VFlowContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SubViewport" type="SubViewport" parent="TextureManager/VFlowContainer/SubViewportContainer"]
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(150, 322)
+render_target_update_mode = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="TextureManager/VFlowContainer/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4236, 0)
+mesh = SubResource("SphereMesh_l21wy")
+script = ExtResource("11_ga0w2")
+FullRotationTimeSeconds = 10.0
+
+[node name="Camera3D" type="Camera3D" parent="TextureManager/VFlowContainer/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4236, 1.82414)
+
 [node name="Load" type="Button" parent="TextureManager/VFlowContainer"]
 layout_mode = 2
 text = "Load"
@@ -537,3 +568,124 @@ size = Vector2i(600, 400)
 ok_button_text = "Open"
 file_mode = 0
 access = 2
+
+[node name="Settings" parent="." instance=ExtResource("11_rt570")]
+visible = false
+
+[node name="TabInsert" type="PanelContainer" parent="Settings"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_u6bxx")
+
+[node name="Workspace" type="PanelContainer" parent="Settings/TabInsert"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_huxjr")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Settings/TabInsert/Workspace"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Settings/TabInsert/Workspace/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PhysicsRate" type="HBoxContainer" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+script = ExtResource("18_cs7rt")
+
+[node name="Label" type="Label" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/PhysicsRate"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Physics rate"
+
+[node name="LineEdit" type="LineEdit" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/PhysicsRate"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("8_tf113")
+
+[node name="Timescale" type="HBoxContainer" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+script = ExtResource("17_7fj2t")
+
+[node name="Label" type="Label" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/Timescale"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Time scale"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/Timescale"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/Timescale/HBoxContainer"]
+layout_mode = 2
+text = "1:"
+
+[node name="LineEdit" type="LineEdit" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/Timescale/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("8_tf113")
+
+[node name="VisualScale" type="HBoxContainer" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+script = ExtResource("19_w6o62")
+
+[node name="Label" type="Label" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/VisualScale"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Visual scale"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/VisualScale"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/VisualScale/HBoxContainer"]
+layout_mode = 2
+text = "1:"
+
+[node name="LineEdit" type="LineEdit" parent="Settings/TabInsert/Workspace/ScrollContainer/VBoxContainer/VisualScale/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("8_tf113")
+
+[node name="LoadError" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_53p26")
+script = ExtResource("22_xwnl2")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="LoadError"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="LoadError/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="LoadError/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Failed to load save:"
+horizontal_alignment = 1
+
+[node name="Savename" type="Label" parent="LoadError/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "placeholder"
+
+[node name="ExceptionBox" type="TextEdit" parent="LoadError/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+editable = false
+
+[node name="GoBack" type="Button" parent="LoadError/VBoxContainer"]
+layout_mode = 2
+text = "Go back to main menu"

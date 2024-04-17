@@ -44,4 +44,9 @@ public partial class SavesManager : Node {
         using var s = File.Open($"{SavesFolder}/{filename}", FileMode.Open);
         WorkspaceSerializer.Deserialize(workspace, new Reader(s));
     }
+
+    public void DeleteSave(string filename)
+    {
+        File.Delete($"{SavesFolder}/{filename}");
+    }
 }

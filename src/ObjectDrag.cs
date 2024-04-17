@@ -13,10 +13,16 @@ public partial class ObjectDrag : Control
 	Line2D xLine;
 	Line2D yLine;
 	Line2D zLine;
-
+	
 	DragAxis draggingAxis = DragAxis.None;
 
 	bool mouseDown = false;
+
+	private bool _gizmoVisible;
+	public bool GizmoVisible {
+		get => _gizmoVisible;
+		set => Visible = _gizmoVisible = value;
+	}
 
 	public event Action Dragging;
 	
@@ -49,11 +55,11 @@ public partial class ObjectDrag : Control
 		var objPos = Object.Position;
 		var directionTo = camPos.DirectionTo(objPos);
 		
-		var a = camPos.DirectionTo(objPos).Dot(workspace.camera.Rotation);
+		//var a = camPos.DirectionTo(objPos).Dot(workspace.camera.Rotation);
 		
 		var dist = 0.1f;
 		var distance3d = camPos.DistanceTo(objPos);
-		var scale = distance3d * (workspace.camera.Fov * (MathF.PI / 180)) * dist * (1-MathF.Abs(a));
+		var scale = distance3d * (workspace.camera.Fov * (MathF.PI / 180)) * dist;// * (1-MathF.Abs(a));
 		
 		/* drag */
 		
@@ -85,16 +91,20 @@ public partial class ObjectDrag : Control
 		
 		/* visuals */
 
-		if (!workspace.camera.IsPositionBehind(objPos))
-		{
+		if (!workspace.camera.IsPositionBehind(objPos)) {
+			if (!GizmoVisible)
+				GizmoVisible = true;
+			
 			var wSize = window.Size;
 			var tolerance = wSize/2;
 			bool vwcheck(Vector2 v) => !(v.X < -tolerance.X || v.Y < -tolerance.Y || v.X > wSize.X+tolerance.X || v.Y > wSize.Y+tolerance.Y);
 
-			var b = 1 + MathF.Abs(a)*MathF.Sqrt(2);
-			var center3d = camPos + directionTo*b;
+			//var b = 1 + MathF.Abs(a)*MathF.Sqrt(2);
+			var center3d = camPos + directionTo; //*b;
 			
 			var center = workspace.camera.UnprojectPosition(center3d);
+			
+			var objPos2d = workspace.camera.UnprojectPosition(objPos);
 			
 			var xArrowPos = workspace.camera.UnprojectPosition(center3d+new Vector3(dist,0,0));
 			var yArrowPos = workspace.camera.UnprojectPosition(center3d+new Vector3(0,dist,0));
@@ -115,6 +125,9 @@ public partial class ObjectDrag : Control
 				zLine.Points = [center, zArrowPos];
 				zArrow.Position = zArrowPos - zArrow.Size / 2;
 			}
+		} else {
+			if (GizmoVisible)
+				GizmoVisible = false;
 		}
 	}
 
@@ -130,7 +143,7 @@ public partial class ObjectDrag : Control
 			return;
 		}
 
-		if (!mouseDown)
+		if (!mouseDown && !workspace.CheckMouse(evt.Position))
 		{
 			if (xArrow.GetRect().HasPoint(evt.Position))  {
 				draggingAxis = DragAxis.X;
@@ -159,13 +172,15 @@ public partial class ObjectDrag : Control
 
 		if (Object == null)
 		{
-			xArrow.Visible = yArrow.Visible = zArrow.Visible = false;
-			xLine.Visible = yLine.Visible = zLine.Visible = false;
+			//xArrow.Visible = yArrow.Visible = zArrow.Visible = false;
+			//xLine.Visible = yLine.Visible = zLine.Visible = false;
+			GizmoVisible = false;
 		}
 		else
 		{
-			xArrow.Visible = yArrow.Visible = zArrow.Visible = true;
-			xLine.Visible = yLine.Visible = zLine.Visible = true;
+			//xArrow.Visible = yArrow.Visible = zArrow.Visible = true;
+			//xLine.Visible = yLine.Visible = zLine.Visible = true;
+			GizmoVisible = true;
 		}
 	}
 }

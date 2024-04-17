@@ -10,6 +10,8 @@ public partial class DoubleInput : LineEdit
 	private string lastText = "";
 	public double Value = 0;
 
+	private bool _debounce = false;
+
 	public event Action<double> ValueChanged;
 	
 	public override void _Ready()
@@ -20,6 +22,9 @@ public partial class DoubleInput : LineEdit
 	
 	private void OnTextChanged(string text)
 	{
+		if (_debounce)
+			return;
+		
 		if (!double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) {
 			Text = lastText;
 		} else if (text == "") {
@@ -33,7 +38,11 @@ public partial class DoubleInput : LineEdit
 
 	public void SetValue(double v, bool invokeEvent)
 	{
+		if (HasFocus())
+			return;
+		_debounce = true;
 		Text = lastText = v.ToString(CultureInfo.InvariantCulture);
+		_debounce = false;
 		Value = v;
 		if (invokeEvent)
 			ValueChanged?.Invoke(v);

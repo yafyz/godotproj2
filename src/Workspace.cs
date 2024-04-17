@@ -11,16 +11,13 @@ public partial class Workspace : Node3D
 	public Dictionary<Simulation.Body, SpaceObject> bodyMap;
 	public Node bodiesContainer;
 	public Camera camera;
-	public bool TimeFrozen = false;
-	public float Timescale = 1;
-	public double PhysicsRate = 0.01f;
-	public double PhysicsRateRemainder = 0;
-	public double VisualScale = 1;
-
+	
 	public EditGui EditGuiO;
 	public ObjectDrag ObjectDragger;
 	public bool EditMode = false;
 	public SpaceObject EditingSpaceObject = null;
+
+	public EscMenu escMenu;
 
 	public string SaveFile;
 
@@ -30,12 +27,90 @@ public partial class Workspace : Node3D
 	public TextureManager textureManager;
 
 	public Marker3D spawnMarker;
+	private Console console;
 
+	public WorkspaceSettings Settings = new();
+
+	private JumpToObject _jumpToObject;
+	private LoadError _loadError;
+	
+	public struct WorkspaceSettings
+	{
+		private bool __TimeFrozen = false;
+		private double __Timescale = 1;
+		private double __PhysicsRate = 0.01f;
+		public double PhysicsRateRemainder = 0;
+		private double __VisualScale = 1;
+		private double __planetVisualScaleMultiplier = 1;
+		
+		private bool __ShowDebug = false;
+
+		public WorkspaceSettings() {}
+
+		public bool TimeFrozen {
+			get => __TimeFrozen;
+			set {
+				var old = __TimeFrozen;
+				__TimeFrozen = value;
+				PropertyChanged?.Invoke("TimeFrozen", old);
+			}
+		}
+		
+		public double Timescale {
+			get => __Timescale;
+			set {
+				var old = __Timescale;
+				__Timescale = value;
+				PropertyChanged?.Invoke("Timescale", old);
+			}
+		}
+		
+		public double PhysicsRate {
+			get => __PhysicsRate;
+			set {
+				var old = __PhysicsRate;
+				__PhysicsRate = value;
+				PropertyChanged?.Invoke("PhysicsRate", old);
+			}
+		}
+		
+		public double VisualScale {
+			get => __VisualScale;
+			set {
+				var old = __VisualScale;
+				__VisualScale = value;
+				PropertyChanged?.Invoke("VisualScale", old);
+			}
+		}
+		
+		public bool ShowDebug {
+			get => __ShowDebug;
+			set {
+				var old = __ShowDebug; 
+				__ShowDebug = value;
+				PropertyChanged?.Invoke("ShowDebug", old);
+			}
+		}
+		
+		public double PlanetVisualScaleMultiplier {
+			get => __planetVisualScaleMultiplier;
+			set {
+				var old = __planetVisualScaleMultiplier; 
+				__planetVisualScaleMultiplier = value;
+				PropertyChanged?.Invoke("PlanetVisualScaleMultiplier", old);
+			}
+		}
+		
+		public event Action<string, object> PropertyChanged;
+	}
+	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		savesManager = GetNode<SavesManager>(Constants.Singletons.SavesManager);
 		uiFocus = GetNode<UIFocus>(Constants.Singletons.UIFocus);
+		
+		console = GetNode<Console>("console");
 		
 		simulation = new();
 		bodyMap = new();
@@ -45,38 +120,59 @@ public partial class Workspace : Node3D
 		EditGuiO = GetNode<EditGui>("EditGui");
 		textureManager = GetNode<TextureManager>("TextureManager");
 		spawnMarker = camera.GetNode<Marker3D>("Marker3D");
+		escMenu = GetNode<EscMenu>("Menu");
+		_jumpToObject = GetNode<JumpToObject>("JumpToObject");
+		_loadError = GetNode<LoadError>("LoadError");
+		
+		simulation.OnBodyConsumed += OnBodyConsumed;
 		
 		EditGuiO.ValueChanged += EditGuiValueChanged;
 		ObjectDragger.Dragging += DraggerDragging;
 		textureManager.ImageRemoved += OnImageRemoved;
 		
+		Settings.PropertyChanged += SettingsOnPropertyChanged;
+		
 		RegisterCommands();
 
 		if (SaveFile != null) {
-			savesManager.Load(this, SaveFile);
-		}
-
-			foreach ((var body, var node) in bodyMap) {
-				node.Sync(VisualScale);
+			try {
+				savesManager.Load(this, SaveFile);
+			} catch (Exception e) {
+				_loadError.ShowError(SaveFile, e);	
 			}
+		}
 			
-			camera.SetToOrbit(bodyMap[earth].Body3D);
+	}
+
+	public bool CheckMouse(Vector2 mpos)
+	{
+		return EditGuiO.CheckMouse(mpos)
+		       || escMenu.CheckMouse(mpos)
+		       || textureManager.CheckMouse(mpos)
+		       || console.CheckMouse(mpos)
+		       || _jumpToObject.CheckMouse(mpos);
+	}
+
+	public void ResyncBodies()
+	{
+		foreach ((var body, var node) in bodyMap) {
+			node.Sync(in Settings);
 		}
 	}
 	
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _PhysicsProcess(double delta)
 	{
-		if (!TimeFrozen && !EditMode) {
-			var d = delta * Timescale + PhysicsRateRemainder;
-			PhysicsRateRemainder = d % PhysicsRate;
+		if (!Settings.TimeFrozen && !EditMode) {
+			var d = delta * Settings.Timescale + Settings.PhysicsRateRemainder;
+			Settings.PhysicsRateRemainder = d % Settings.PhysicsRate;
 
-			for (int i = 0; i < d/PhysicsRate; i++) {
-				simulation.Step(PhysicsRate);
+			for (int i = 0; i < d/Settings.PhysicsRate; i++) {
+				simulation.Step(Settings.PhysicsRate);
 			}
 
 			foreach ((var body, var node) in bodyMap) {
-				node.Sync(VisualScale);
+				node.Sync(in Settings);
 			}
 			
 			EditGuiO.Refresh();
@@ -90,7 +186,7 @@ public partial class Workspace : Node3D
 		if (space_state != null) {
 			var mpos = window.GetMousePosition();
 
-			if (EditGuiO.CheckMouse(mpos))
+			if (CheckMouse(mpos))
 				return;
 			
 			var ray_start = camera.ProjectRayOrigin(mpos);
@@ -107,8 +203,7 @@ public partial class Workspace : Node3D
 						.FirstOrDefault(so => so.Body3D == obj);
 					
 					if (so != null) {
-						camera.SetToOrbit(obj.Owner as Node3D);
-						EditGuiO.ShowGui(so);
+						FocusSpaceObject(so);
 					}
 				} else {
 					camera.SetToFreecam();
@@ -131,14 +226,76 @@ public partial class Workspace : Node3D
 				}
 			}
 		}
+	}
 
-		if (Input.IsActionJustPressed(Constants.KeyBindings.OpenSpawnMenu)) {
-			var body = AddBody(Vector3D.FromVector3(spawnMarker.GlobalPosition) * VisualScale, new Vector3D(), 1, 1, 0);
+	public void FocusSpaceObject(SpaceObject so, float scrollSpeed = -1, float distance = -1, bool adjustAngle = true)
+	{
+		if (scrollSpeed == -1) {
+			scrollSpeed = camera.CalculateScrollSpeed(so.Mesh.Radius);
+		}
+		camera.SetToOrbit(so.MeshInstance, scrollSpeed, distance, adjustAngle);
+		EditGuiO.ShowGui(so);
+	}
+	
+	private void SettingsOnPropertyChanged(string prop, object old)
+	{
+		if (prop is "VisualScale" or "PlanetVisualScaleMultiplier") {
+			ResyncBodies();
+			
+			if (camera.Behavior == Camera.CameraBehavior.Orbit) {
+				var dist = camera.orbitDistance * prop switch {
+					"VisualScale" => (float)((double)old/Settings.VisualScale),
+					"PlanetVisualScaleMultiplier" => (float)(Settings.PlanetVisualScaleMultiplier/(double)old),
+					_ => throw new Exception("unreachable!")
+				};
+				
+				FocusSpaceObject(
+					EditGuiO.Object,
+					distance: dist,
+					adjustAngle: false
+				);
+			}
+		}
+	}
+	
+	public override void _UnhandledKeyInput(InputEvent @event)
+	{
+		if (@event is not InputEventKey evt)
+			return;
+
+		if (evt.IsActionPressed(Constants.KeyBindings.OpenSpawnMenu)) {
+			GetViewport().SetInputAsHandled();
+			var body = AddBody($"Object {bodyMap.Count+1}",Vector3D.FromVector3(spawnMarker.GlobalPosition) * Settings.VisualScale, new Vector3D(), 1, 1, 0);
 			var so = bodyMap[body];
 			EnterEditMode(so);
+		} else if (evt.IsActionPressed(Constants.KeyBindings.ShowDebug)) {
+			GetViewport().SetInputAsHandled();
+			Settings.ShowDebug = !Settings.ShowDebug;
+			ResyncBodies();
+		} else if (evt.IsActionPressed(Constants.KeyBindings.FreezeTime)) {
+			GetViewport().SetInputAsHandled();
+			Settings.TimeFrozen = !Settings.TimeFrozen;
+		} else if (evt.IsActionPressed(Constants.KeyBindings.JumpToObject)) {
+			GetViewport().SetInputAsHandled();
+			_jumpToObject.ShowGui();
 		}
 	}
 
+	public void OnBodyConsumed(Simulation.Body body1, Simulation.Body body2)
+	{
+		var so1 = bodyMap[body1];
+		var so2 = bodyMap[body2];
+		
+		if (camera.OrbitSubject == so1.MeshInstance) {
+			var dist = Math.Max(camera.orbitDistance, camera.CalculateOrbitDistance(so2.Mesh.Radius));
+			
+			FocusSpaceObject(so2, distance: dist);
+		}
+		
+		bodyMap.Remove(body1);
+		so1.Free();
+	}
+	
 	public void OnImageRemoved(StoredImage image)
 	{
 		foreach ((_, var so) in bodyMap) {
@@ -153,12 +310,13 @@ public partial class Workspace : Node3D
 	
 	public void EditGuiValueChanged()
 	{
-		EditGuiO.Object.Sync(VisualScale);
+		EditGuiO.Object.Sync(in Settings);
+		camera.ScrollSpeed = camera.CalculateScrollSpeed(EditGuiO.Object.Mesh.Radius);
 	}
 
 	public void DraggerDragging()
 	{
-		EditingSpaceObject.SimBody.Position = Vector3D.FromVector3(EditingSpaceObject.Mesh.Position)*VisualScale;
+		EditingSpaceObject.SimBody.Position = Vector3D.FromVector3(EditingSpaceObject.MeshInstance.Position)*Settings.VisualScale;
 		EditGuiO.Refresh();
 	}
 	
@@ -167,7 +325,7 @@ public partial class Workspace : Node3D
 			QuitEditMode();
 		EditMode = true;
 		EditingSpaceObject = so;
-		ObjectDragger.SetDrag(so.Mesh);
+		ObjectDragger.SetDrag(so.MeshInstance);
 		camera.SetToFreecam();
 		EditGuiO.ShowGui(so);
 	}
@@ -175,7 +333,7 @@ public partial class Workspace : Node3D
 	public void QuitEditMode() {
 		if (!EditMode)
 			return;
-		var newPos = Vector3D.FromVector3(EditingSpaceObject.Mesh.Position)*VisualScale;
+		var newPos = Vector3D.FromVector3(EditingSpaceObject.MeshInstance.Position)*Settings.VisualScale;
 		EditingSpaceObject.SimBody.Position = newPos;
 		EditMode = false;
 		EditingSpaceObject = null;
@@ -196,8 +354,6 @@ public partial class Workspace : Node3D
 	}
 
 	public void RegisterCommands() {
-		Console console = GetNode<Console>("console");
-
 		console.AddCommand("save",
 			(string filename) => Save(filename),
 			new Console.CommandArgument[] {
@@ -236,7 +392,7 @@ public partial class Workspace : Node3D
 			)
 		});
 
-		console.AddCommand("freeze", (bool s) => TimeFrozen = s,
+		console.AddCommand("freeze", (bool s) => Settings.TimeFrozen = s,
 			new Console.CommandArgument[] {
 				new(
 					"frozen",
@@ -247,7 +403,7 @@ public partial class Workspace : Node3D
 			}
 		);
 
-		console.AddCommand("timescale", (float s) => Timescale = s,
+		console.AddCommand("timescale", (float s) => Settings.Timescale = s,
 			new Console.CommandArgument[] {
 				new(
 					"scale",
@@ -258,7 +414,7 @@ public partial class Workspace : Node3D
 			}
 		);
 
-		console.AddCommand("physicsrate", (double s) => PhysicsRate = s,
+		console.AddCommand("physicsrate", (double s) => Settings.PhysicsRate = s,
 			new Console.CommandArgument[] {
 				new(
 					"rate",
@@ -271,10 +427,8 @@ public partial class Workspace : Node3D
 
 		console.AddCommand("scale",
 			(double s) => {
-				VisualScale = s;
-				foreach ((var body, var node) in bodyMap) {
-					node.Sync(VisualScale);
-				}
+				Settings.VisualScale = s;
+				ResyncBodies();
 			},
 			new Console.CommandArgument[] {
 				new(
@@ -306,10 +460,26 @@ public partial class Workspace : Node3D
 			if (EditingSpaceObject == null) return;
 			EditingSpaceObject.RemoveTexture();
 		});
+		
+		console.AddCommand("planetscale",
+			(double s) => {
+				Settings.PlanetVisualScaleMultiplier = s;
+				ResyncBodies();
+			},
+			new Console.CommandArgument[] {
+				new(
+					"scale",
+					typeof(double),
+					s => double.Parse(s),
+					(_, argv, argi) => new(double.TryParse(argv[argi], out var res) ? Console.HinterInputResult.Ok : Console.HinterInputResult.Error)
+				)
+			}
+		);
 	}
 
-	public Simulation.Body AddBody(Vector3D position, Vector3D velocity, double mass, double density, double energy) {
+	public Simulation.Body AddBody(string name, Vector3D position, Vector3D velocity, double mass, double density, double energy) {
 		Simulation.Body body = new Simulation.Body() {
+			Name = name,
 			Position = position,
 			Velocity = velocity,
 			Mass = mass,
@@ -323,9 +493,9 @@ public partial class Workspace : Node3D
 	}
 
 	public void AddBody(Simulation.Body body) {
-		var obj = new SpaceObject(body, VisualScale);
+		var obj = new SpaceObject(body, in Settings);
 
-		bodiesContainer.AddChild(obj.Mesh);
+		bodiesContainer.AddChild(obj.MeshInstance);
 
 		bodyMap.Add(body, obj);
 		simulation.AddBody(body);

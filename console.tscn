@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://c555mcfr0grv0"]
+[gd_scene load_steps=3 format=3 uid="uid://c555mcfr0grv0"]
 
 [ext_resource type="Script" path="res://src/Console.cs" id="1_jbjr2"]
+[ext_resource type="Script" path="res://src/gui/ConsoleLogUI.cs" id="2_wwf6r"]
 
 [node name="console" type="Control"]
 layout_mode = 3
@@ -29,3 +30,20 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 scroll_active = false
+
+[node name="Window" type="Window" parent="."]
+title = "Console Log"
+size = Vector2i(250, 100)
+visible = false
+script = ExtResource("2_wwf6r")
+
+[node name="PanelContainer" type="PanelContainer" parent="Window"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Window/PanelContainer"]
+layout_mode = 2
+bbcode_enabled = true

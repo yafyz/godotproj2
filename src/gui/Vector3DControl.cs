@@ -14,9 +14,9 @@ public partial class Vector3DControl : Control
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		xInput = GetNode<DoubleInput>("X");
-		yInput = GetNode<DoubleInput>("Y");
-		zInput = GetNode<DoubleInput>("Z");
+		xInput = GetNode<DoubleInput>("PanelContainer/HBoxContainer/X");
+		yInput = GetNode<DoubleInput>("PanelContainer/HBoxContainer/Y");
+		zInput = GetNode<DoubleInput>("PanelContainer/HBoxContainer/Z");
 
 		xInput.ValueChanged += InputChanged;
 		yInput.ValueChanged += InputChanged;

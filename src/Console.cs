@@ -17,14 +17,25 @@ public partial class Console : Control
 	bool isOpen;
 	string input;
 
-	Dictionary<string, Command> commands = new();
+	public Dictionary<string, Command> Commands = new();
 
 	private UIFocus uiFocus;
+	private ConsoleLog _consoleLog;
+	private ConsoleLogUI _consoleLogUi;
+	
+	const string ERR_COLOR = "#FF0000";
+	const string OK_COLOR = "#00FF00";
+	const string HINTING_COLOR = "#0000FF";
+	const string HINT_COLOR = "#999999";
+	const string CURRENT_POSITION_INDICATOR = "_";
 	
 	public override void _Ready()
 	{
+		_consoleLog = GetNode<ConsoleLog>(Constants.Singletons.ConsoleLog);
 		uiFocus = GetNode<UIFocus>(Constants.Singletons.UIFocus);
-
+		
+		_consoleLogUi = GetNode<ConsoleLogUI>("Window");
+		
 		Label = GetNode("Panel").GetNode<RichTextLabel>("RichTextLabel");
 		Label.BbcodeEnabled = true;
 		SetVisible(false);
@@ -34,6 +45,11 @@ public partial class Console : Control
 		gcmd.Register(this);
 	}
 
+	public bool CheckMouse(Vector2 mpos)
+	{
+		return WindowHelper.WindowHasMouse(_consoleLogUi, mpos);
+	}
+	
 	public void SetVisible(bool visible) {
 		Visible = isOpen = visible;
 		uiFocus.ConsoleFocusOverride = visible;
@@ -44,7 +60,7 @@ public partial class Console : Control
 	}
 
 	public void AddCommand(Command command) {
-		commands[command.Name] = command;
+		Commands[command.Name] = command;
 	}
 
 	public void OpenConsole() {
@@ -59,19 +75,13 @@ public partial class Console : Control
 
 	// this was written without looking back, how could you tell?
 	void UpdateConsole() {
-		const string ERR_COLOR = "#FF0000";
-		const string OK_COLOR = "#00FF00";
-		const string HINTING_COLOR = "#0000FF";
-		const string HINT_COLOR = "#999999";
-		const string CURRENT_POSITION_INDICATOR = "_";
-
 		string[] argv = input.Split(" ");
 
 		StringBuilder stringBuilder = new();
 
 		stringBuilder.Append('>');
 
-		if (commands.TryGetValue(argv[0], out var cmd)) {
+		if (Commands.TryGetValue(argv[0], out var cmd)) {
 			stringBuilder.Append($"[color={OK_COLOR}]");
 			stringBuilder.Append(argv[0]);
 			stringBuilder.Append("[/color]");
@@ -184,7 +194,7 @@ public partial class Console : Control
 			// no command found
 			var hint =
 				(input != "") ?
-					commands
+					Commands
 						.Select(x => x.Key)
 						.FirstOrDefault(x => x.StartsWith(argv[0]))
 					: null;
@@ -214,17 +224,37 @@ public partial class Console : Control
 	void ExecuteCommand(string command) {
 		var argv = command.Split(" ");
 
-		if (!commands.TryGetValue(argv[0], out var cmd))
-			return;
+		string log = "> "+input;
 
-		if (argv.Length-1 != cmd.Arguments.Length)
+		if (!Commands.TryGetValue(argv[0], out var cmd)) {
+			log += $"\n[color={ERR_COLOR}]unknown command[/color]";
+			_consoleLog.Add(log);
 			return;
+		}
+
+		if (argv.Length - 1 != cmd.Arguments.Length) {
+			_consoleLog.Add(log);
+			return;
+		}
 
 		var args = new object[cmd.Arguments.Length];
 		for (int i = 0; i < cmd.Arguments.Length; i++)
 			args[i] = cmd.Arguments[i].ParserFunc(argv[i+1]);
 
-		cmd.Call(args);
+		try {
+			if (cmd.Function.Method.ReturnType != typeof(void)) {
+				object r = cmd.Call(args);
+				log += $"\n{r}";
+			} else {
+				cmd.Call(args);
+			}
+		} catch (Exception e) {
+			log += $"\n[color={ERR_COLOR}]{e}[/color]";
+			_consoleLog.Add(log);
+			throw;
+		}
+		
+		_consoleLog.Add(log);
 	}
 
 	void Autocomplete() {
@@ -232,7 +262,7 @@ public partial class Console : Control
 
 		if (argv.Length == 1 && argv[0].Trim() != "") {
 			var hint =
-					commands
+					Commands
 						.Select(x => x.Key)
 						.FirstOrDefault(x => x.StartsWith(argv[0]));
 
@@ -240,7 +270,7 @@ public partial class Console : Control
 				argv[0] = hint;
 				input = string.Join(" ", argv);
 			}
-		} else if (argv.Length > 1 && commands.TryGetValue(argv[0], out var cmd)) {
+		} else if (argv.Length > 1 && Commands.TryGetValue(argv[0], out var cmd)) {
 			if (argv.Length-1 > cmd.Arguments.Length)
 				return;
 
@@ -305,27 +335,31 @@ public partial class Console : Control
 				UpdateConsole();
 			}
 
-			GetViewport().SetInputAsHandled();
+			GetViewport()?.SetInputAsHandled();
 		} else if (evt.IsActionPressed(Constants.KeyBindings.OpenConsole)) {
 			OpenConsole();
 			GetViewport().SetInputAsHandled();
 		}
     }
 
-
+    public void ShowLogs()
+    {
+	    _consoleLogUi.ShowGui();
+    }
+    
 	public class Command {
 		public string Name;
 		public CommandArgument[] Arguments;
-		Delegate function;
+		public Delegate Function;
 
 		public Command(string name, Delegate function, CommandArgument[] arguments = null) {
 			Name = name;
 			Arguments = arguments ?? Array.Empty<CommandArgument>();
-			this.function = function;
+			this.Function = function;
 		}
 
-		public void Call(object[] arguments) {
-			function.DynamicInvoke(arguments);
+		public object? Call(object[] arguments) {
+			return Function.DynamicInvoke(arguments);
 		}
 	}
 

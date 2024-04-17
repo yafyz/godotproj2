@@ -3,14 +3,20 @@ using System;
 
 public class Constants
 {
+	public const string SettingsFile = "settings.json";
+	
 	public class Scenes {
 		public static StringName MainMenu = "res://main_menu.tscn";
 		public static StringName Workspace = "res://workspace.tscn";
+
+		public static StringName KeybindGui = "res://src/gui/settings/KeybindGui.tscn";
 	}
 
 	public class Singletons {
+		public static NodePath SettingsSave = "/root/SettingsSave";
 		public static NodePath SavesManager = "/root/SavesManager";
 		public static NodePath UIFocus = "/root/UiFocus";
+		public static NodePath ConsoleLog = "/root/ConsoleLog";
 	}
 
 	public class KeyBindings {
@@ -31,5 +37,10 @@ public class Constants
 		public readonly static StringName OpenSpawnMenu = "open_spawn_menu";
 		public readonly static StringName ESC = "ESC";
 		public readonly static StringName EditMode = "edit_mode";
+
+		public readonly static StringName ShowDebug = "show_debug";
+		public readonly static StringName FreezeTime = "freeze_time";
+
+		public readonly static StringName JumpToObject = "jump_to_object";
 	}
 }

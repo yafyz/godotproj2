@@ -11,6 +11,9 @@ public partial class UIFocus : Node
 		if (@event is not InputEventMouseButton evt)
 			return;
 		
+		if (!evt.Pressed)
+			return;
+		
 		var focus = GetWindow().GuiGetFocusOwner();
 		
 		if (focus == null)

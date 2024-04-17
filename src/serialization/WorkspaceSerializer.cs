@@ -9,8 +9,15 @@ namespace Serialization;
 
 public class WorkspaceSerializer {
     public static byte[] Magic = {0x7F, (byte)'b', (byte)'a', (byte)'l', (byte)'l', (byte)'s'};
-    public static int Version = 3;
+    public static int Version = 5;
 
+    public enum CameraMode
+    {
+        Freecam,
+        Orbit,
+        Edit
+    }
+    
     public static void Serialize(Workspace workspace, Writer writer) {
         // header
         writer.WriteBytes(Magic);
@@ -23,22 +30,35 @@ public class WorkspaceSerializer {
         }
         
         // workspace settings
-        writer.WriteDouble(workspace.VisualScale);
+        writer.WriteBool(workspace.Settings.TimeFrozen);
+        writer.WriteDouble(workspace.Settings.Timescale);
+        writer.WriteDouble(workspace.Settings.PhysicsRate);
+        writer.WriteDouble(workspace.Settings.PhysicsRateRemainder);
+        writer.WriteDouble(workspace.Settings.VisualScale);
+        writer.WriteDouble(workspace.Settings.PlanetVisualScaleMultiplier);
 
         // camera
         writer.WriteVector3(workspace.camera.Position);
         writer.WriteVector3(workspace.camera.Rotation);
-        writer.WriteBool(workspace.camera.Behavior == Camera.CameraBehavior.Orbit);
 
         if (workspace.camera.Behavior == Camera.CameraBehavior.Orbit) {
             var index = workspace.simulation.BodyList
-                .FindIndex(x => workspace.bodyMap[x].Mesh == workspace.camera.OrbitSubject);
+                .FindIndex(x => workspace.bodyMap[x].MeshInstance == workspace.camera.OrbitSubject);
+            writer.WriteInt32((int)CameraMode.Orbit);
             writer.WriteInt32(index);
+        } else if (workspace.EditingSpaceObject != null) {
+            var index = workspace.simulation.BodyList
+                .FindIndex(x => workspace.bodyMap[x] == workspace.EditingSpaceObject);
+            writer.WriteInt32((int)CameraMode.Edit);
+            writer.WriteInt32(index);
+        } else {
+            writer.WriteInt32((int)CameraMode.Freecam);
         }
 
         // bodies
         writer.WriteInt32(workspace.bodyMap.Count);
         foreach (var body in workspace.simulation.BodyList) {
+            writer.WriteString(body.Name);
             writer.WriteVector3D(body.Position);
             writer.WriteVector3D(body.Velocity);
             writer.WriteVector3D(body.OldAcceleration);
@@ -70,28 +90,35 @@ public class WorkspaceSerializer {
         }
         
         // workspace settings
-        workspace.VisualScale = reader.ReadDouble();
+        workspace.Settings.TimeFrozen = reader.ReadBool();
+        workspace.Settings.Timescale = reader.ReadDouble();
+        workspace.Settings.PhysicsRate = reader.ReadDouble();
+        workspace.Settings.PhysicsRateRemainder = reader.ReadDouble();
+        workspace.Settings.VisualScale = reader.ReadDouble();
+        workspace.Settings.PlanetVisualScaleMultiplier = reader.ReadDouble();
 
         // camera
         workspace.camera.SetToFreecam();
         workspace.camera.Position = reader.ReadVector3();
         workspace.camera.Rotation = reader.ReadVector3();
 
-        bool is_orbit = reader.ReadBool();
-        int orbit_index = is_orbit ? reader.ReadInt32() : -1;
+        CameraMode mode = (CameraMode)reader.ReadInt32();
+        int orbit_index = mode != CameraMode.Freecam ? reader.ReadInt32() : -1;
 
         // bodies
         foreach ((_, var spaceobject) in workspace.bodyMap) {
-            workspace.RemoveChild(spaceobject.Mesh);
-            spaceobject.Mesh.QueueFree();
+            workspace.RemoveChild(spaceobject.Body3D);
+            spaceobject.MeshInstance.QueueFree();
         }
 
         workspace.bodyMap = new();
         workspace.simulation = new();
+        workspace.simulation.OnBodyConsumed += workspace.OnBodyConsumed;
 
         var count = reader.ReadInt32();
         for (int i = 0; i < count; i++) {
             var body = new Simulation.Body {
+                Name = reader.ReadString(),
                 Position = reader.ReadVector3D(),
                 Velocity = reader.ReadVector3D(),
                 OldAcceleration = reader.ReadVector3D(),
@@ -109,10 +136,14 @@ public class WorkspaceSerializer {
                 workspace.bodyMap[body].SetTexture(img);
             }
 
-            workspace.bodyMap[body].Sync(workspace.VisualScale);
+            workspace.bodyMap[body].Sync(in workspace.Settings);
 
-            if (is_orbit && i == orbit_index) {
-                workspace.camera.SetToOrbit(workspace.bodyMap[body].Mesh);
+            if (mode != CameraMode.Freecam && i == orbit_index) {
+                if (mode == CameraMode.Orbit) {
+                    workspace.FocusSpaceObject(workspace.bodyMap[body]);
+                } else if (mode == CameraMode.Edit) {
+                    workspace.EnterEditMode(workspace.bodyMap[body]);
+                }
             }
         }
     }

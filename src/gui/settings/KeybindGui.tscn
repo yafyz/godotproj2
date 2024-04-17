@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://cvxqlehmv4d2c"]
+
+[ext_resource type="Script" path="res://src/gui/settings/KeybindGui.cs" id="1_qbvxw"]
+
+[node name="Template" type="HBoxContainer"]
+script = ExtResource("1_qbvxw")
+
+[node name="Name" type="Label" parent="."]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+text = "Placeholder: "
+
+[node name="Button" type="Button" parent="."]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+text = "B"

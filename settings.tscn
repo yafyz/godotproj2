@@ -1,0 +1,192 @@
+[gd_scene load_steps=12 format=3 uid="uid://c5akv15e1f11n"]
+
+[ext_resource type="Script" path="res://src/gui/SettingsGui.cs" id="1_w8e7v"]
+[ext_resource type="Script" path="res://src/gui/KeybindsSettings.cs" id="2_2f8a4"]
+[ext_resource type="Script" path="res://src/gui/settings/CameraSensitivity.cs" id="2_i03wp"]
+[ext_resource type="Script" path="res://src/gui/settings/CameraFlySpeed.cs" id="3_gx5en"]
+[ext_resource type="Script" path="res://src/gui/DoubleInput.cs" id="4_kf2uc"]
+[ext_resource type="Script" path="res://src/gui/settings/CameraSpeedMultiplier.cs" id="5_iotci"]
+[ext_resource type="Script" path="res://src/gui/settings/CameraSpeedScroll.cs" id="6_7xw62"]
+[ext_resource type="Script" path="res://src/gui/PressKeyDialog.cs" id="8_3etgq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fmob4"]
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+border_blend = true
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mayuo"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_lfk32"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[node name="Settings" type="Control"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_w8e7v")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_fmob4")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="Tabs" type="TabContainer" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Camera" type="PanelContainer" parent="PanelContainer/VBoxContainer/Tabs"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_mayuo")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/VBoxContainer/Tabs/Camera"]
+layout_mode = 2
+
+[node name="Camera" type="VBoxContainer" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CamSens" type="HBoxContainer" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera"]
+layout_mode = 2
+script = ExtResource("2_i03wp")
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSens"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Camera sensitivity"
+
+[node name="Percent" type="Label" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSens"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+size_flags_vertical = 1
+text = "100%"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSlider" type="HSlider" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSens"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+min_value = 1.0
+max_value = 1000.0
+value = 100.0
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera"]
+layout_mode = 2
+
+[node name="CamSpeed" type="HBoxContainer" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera"]
+layout_mode = 2
+script = ExtResource("3_gx5en")
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSpeed"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Camera fly speed"
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSpeed"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("4_kf2uc")
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera"]
+layout_mode = 2
+
+[node name="CamSpeedMult" type="HBoxContainer" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera"]
+layout_mode = 2
+script = ExtResource("5_iotci")
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSpeedMult"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Camera fly speed multiplier"
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSpeedMult"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("4_kf2uc")
+
+[node name="HSeparator3" type="HSeparator" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera"]
+layout_mode = 2
+
+[node name="CamSpeedScroll" type="HBoxContainer" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera"]
+layout_mode = 2
+script = ExtResource("6_7xw62")
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSpeedScroll"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Camera scroll speed"
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/Tabs/Camera/ScrollContainer/Camera/CamSpeedScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("4_kf2uc")
+
+[node name="Keybinds" type="PanelContainer" parent="PanelContainer/VBoxContainer/Tabs"]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_lfk32")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/VBoxContainer/Tabs/Keybinds"]
+layout_mode = 2
+
+[node name="Keybinds" type="VBoxContainer" parent="PanelContainer/VBoxContainer/Tabs/Keybinds/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("2_2f8a4")
+
+[node name="Close" type="Button" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "close"
+
+[node name="PressKeyDialog" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("8_3etgq")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PressKeyDialog"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="PressKeyDialog/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 30
+text = "Press a key"
+
+[node name="Button" type="Button" parent="PressKeyDialog/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "Cancel"

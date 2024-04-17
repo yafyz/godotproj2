@@ -7,24 +7,29 @@ public partial class Camera : Camera3D
 		Freecam, Orbit
 	}
 
-	float Speed = 4f;
-	float SpeedFastMultiplier = 4f;
+	public float ScrollSpeed = 1;
+	float Speed => SettingsManager.Settings.CameraFlySpeed;
+	float SpeedFastMultiplier => SettingsManager.Settings.CameraFlySpeedMultiplier;
 
 	Vector2 LastMousePos;
 	Vector2 MouseDelta;
 
-	public Node3D OrbitSubject;
-	float orbitDistance = 2;
+	public MeshInstance3D OrbitSubject;
+	public float orbitDistance { get; set; } = 2;
 	Vector2 orbitAngle;
 	
 	public CameraBehavior Behavior = CameraBehavior.Freecam;
 
 	private UIFocus uiFocus;
+
+	public Marker3D LookMarker;
+	public Vector3 LookVector => (Position - LookMarker.GlobalPosition).Normalized();
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		uiFocus = GetNode<UIFocus>(Constants.Singletons.UIFocus);
+		LookMarker = GetNode<Marker3D>("Marker3D");
 		
 		GD.Print("balls cam");
 	}
@@ -43,8 +48,8 @@ public partial class Camera : Camera3D
 				/* Camera rotation */
 				
 				if (Input.IsActionPressed(Constants.KeyBindings.RMB)) {
-					rotation.Y += -Settings.MouseSensitivity*MouseDelta.X;
-					rotation.X += -Settings.MouseSensitivity*MouseDelta.Y;
+					rotation.Y += -SettingsManager.Settings.MouseSensitivity*MouseDelta.X;
+					rotation.X += -SettingsManager.Settings.MouseSensitivity*MouseDelta.Y;
 				}
 
 				/* Camera movement */
@@ -103,8 +108,8 @@ public partial class Camera : Camera3D
 
 				if (Input.IsActionPressed(Constants.KeyBindings.RMB))
 				{
-					orbitAngle.X += MouseDelta.X * Settings.MouseSensitivity;
-					orbitAngle.Y = Math.Clamp(orbitAngle.Y - MouseDelta.Y * Settings.MouseSensitivity, 0.0001f, MathF.PI*0.9999f);
+					orbitAngle.X += MouseDelta.X * SettingsManager.Settings.MouseSensitivity;
+					orbitAngle.Y = Math.Clamp(orbitAngle.Y - MouseDelta.Y * SettingsManager.Settings.MouseSensitivity, 0.0001f, MathF.PI*0.9999f);
 				}
 
 				Vector2 zxPlane = new Vector2(MathF.Cos(orbitAngle.X), Mathf.Sin(orbitAngle.X)) * orbitDistance * MathF.Sin(orbitAngle.Y);
@@ -128,13 +133,13 @@ public partial class Camera : Camera3D
 			var factor = evtm.Factor == 0 ? 1 : evtm.Factor;
 
 			if (evtm.ButtonIndex == MouseButton.WheelUp) {
-				orbitDistance += Settings.ScrollSpeed * factor;
+				orbitDistance += SettingsManager.Settings.CameraScrollSpeed * factor * ScrollSpeed;
 			}
 			if (evtm.ButtonIndex == MouseButton.WheelDown) {
-				orbitDistance -= Settings.ScrollSpeed * factor;
+				orbitDistance -= SettingsManager.Settings.CameraScrollSpeed * factor * ScrollSpeed;
 			}
 
-			orbitDistance = MathF.Max(1, orbitDistance);
+			orbitDistance = MathF.Max(0.1f, orbitDistance);
 		}
     }
 
@@ -143,13 +148,29 @@ public partial class Camera : Camera3D
 		OrbitSubject = null;
 	}
 
-	public void SetToOrbit(Node3D obj) {
+	public void SetToOrbit(MeshInstance3D obj, float scrollSpeed = -1, float distance = -1, bool adjustAngle = true) {
 		Behavior = CameraBehavior.Orbit;
 		OrbitSubject = obj;
+
+		if (adjustAngle || Behavior == CameraBehavior.Freecam) {
+			Vector3 relativePos = Position - OrbitSubject.Position;
+			Vector2 c = new Vector2(relativePos.X, relativePos.Z).Normalized();
+			orbitAngle = new Vector2(c.Angle(), MathF.Acos(relativePos.Normalized().Y));
+		}
 		
-		Vector3 relativePos = Position - OrbitSubject.Position;
-		Vector2 c = new Vector2(relativePos.X, relativePos.Z).Normalized();
-		orbitAngle = new Vector2(c.Angle(), MathF.Acos(relativePos.Normalized().Y));
-		orbitDistance = (obj.Position - Position).Length();
+		orbitDistance = distance switch {
+			not -1 => distance,
+			_ => (obj.Position - Position).Length()
+		};
+		ScrollSpeed = scrollSpeed switch {
+			not -1 => scrollSpeed,
+			_ => 1
+		};
 	}
+
+	public float CalculateOrbitDistance(float radius)
+		=> radius * 10;
+
+	public float CalculateScrollSpeed(float radius)
+		=> radius * 5;
 }

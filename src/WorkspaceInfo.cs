@@ -13,14 +13,18 @@ public partial class WorkspaceInfo : RichTextLabel
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
+		Visible = workspace.Settings.ShowDebug;
+		
 		Text =   $"[right]" 
-		       + $"TimeFrozen={workspace.TimeFrozen}\n" 
-		       + $"TimeScale={workspace.Timescale}\n"
-		       + $"PhysicsRate={workspace.PhysicsRate}\n"
-		       + $"VisualScale={workspace.VisualScale}\n"
+		       + $"TimeFrozen={workspace.Settings.TimeFrozen}\n" 
+		       + $"TimeScale={workspace.Settings.Timescale}\n"
+		       + $"PhysicsRate={workspace.Settings.PhysicsRate}\n"
+		       + $"VisualScale={workspace.Settings.VisualScale}\n"
 		       + $"CameraMode={workspace.camera.Behavior}\n"
 		       + $"SaveFile={workspace.SaveFile}\n"
-		       + $"BodyCount={workspace.bodyMap.Count}"
+		       + $"BodyCount={workspace.bodyMap.Count}\n"
+		       + $"OrbitDistance={workspace.camera.orbitDistance}\n"
+		       + $"CameraPos={workspace.camera.Position}"
 		       + $"[/right]";
 	}
 }

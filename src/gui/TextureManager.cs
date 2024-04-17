@@ -13,6 +13,9 @@ public partial class TextureManager : Panel
 	private FileDialog FileDialog;
 	private AcceptDialog ErrorDialog;
 
+	private SphereMesh Mesh;
+	private StandardMaterial3D Material;
+    
 	public List<StoredImage> Images = new();
 
 	public event Action<StoredImage> ImageRemoved;
@@ -26,7 +29,8 @@ public partial class TextureManager : Panel
 		CloseButton = GetNode<Button>("VFlowContainer/Close");
 		FileDialog = GetNode<FileDialog>("FileDialog");
 		ErrorDialog = GetNode<AcceptDialog>("AcceptDialog");
-
+		Mesh = (SphereMesh)GetNode<MeshInstance3D>("VFlowContainer/SubViewportContainer/SubViewport/MeshInstance3D").Mesh;
+		
 		LoadButton.Pressed += LoadButtonClicked;
 		DeleteButton.Pressed += DeleteButtonClicked;
 		CloseButton.Pressed += CloseButtonPressed;
@@ -34,6 +38,18 @@ public partial class TextureManager : Panel
 		FileDialog.Title = "Load a texture";
 		FileDialog.Filters = ["*.jpg", "*.png"];
 		FileDialog.FileSelected += FileDialogFileSelected;
+		
+		TextureList.ItemSelected += TextureClicked;
+
+		Mesh.Material = Material = new StandardMaterial3D();
+		Material.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
+	}
+
+	private void TextureClicked(long index)
+	{
+		Material.AlbedoTexture = null;
+		var img = Images[(int)index];
+		Material.AlbedoTexture = img.Texture;
 	}
 
 	public void LoadButtonClicked()
@@ -72,6 +88,8 @@ public partial class TextureManager : Panel
 		var offset = 0;
 		foreach (var idx in TextureList.GetSelectedItems()) {
 			var img = Images[idx - offset];
+			if (Material.AlbedoTexture == img.Texture)
+				Material.AlbedoTexture = null;
 			RemoveItem(img);
 			offset++;
 		}
@@ -105,6 +123,13 @@ public partial class TextureManager : Panel
 		Images.Clear();
 		TextureList.Clear();
 	}
+
+	public bool CheckMouse(Vector2 mpos)
+	{
+		return Visible && GetGlobalRect().HasPoint(mpos)
+			|| WindowHelper.WindowHasMouse(FileDialog, mpos)
+			|| WindowHelper.WindowHasMouse(ErrorDialog, mpos);
+	}
 }
 
 public class StoredImage
@@ -119,6 +144,9 @@ public class StoredImage
 	public byte[] RawData;
 	
 	public Image Image;
+
+	private ImageTexture _texture;
+	public ImageTexture Texture => _texture ??= ImageTexture.CreateFromImage(Image);
 
 	public StoredImage(string name, ImageFormat imageFormat, byte[] rawData)
 	{

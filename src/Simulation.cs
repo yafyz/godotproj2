@@ -8,6 +8,11 @@ public class Simulation
 
 	public List<Body> BodyList;
 
+
+	public delegate void DOnBodyConsumed(Body consumed, Body consumee);
+
+	public event DOnBodyConsumed OnBodyConsumed;
+	
 	public Simulation() {
 		BodyList = new();
 	}
@@ -19,46 +24,71 @@ public class Simulation
 	public void AddBody(Body body) {
 		BodyList.Add(body);
 	}
-
-	public void Step(double delta) {
+	
+	public void Step(double delta)
+	{
+		Dictionary<Body, Body> toKill = [];
+		
 		foreach (var body in BodyList) {
+			if (toKill.ContainsKey(body)) continue;
+			
 			Vector3D acc = new();
-
+			
 			foreach (var body2 in BodyList) {
 				if (body == body2) continue;
-
+				if (toKill.ContainsKey(body2)) continue;
+				
 				Vector3D off = body.Position-body2.Position;
+
+				if (off.Length() < body.Radius
+				    && body.Radius > body2.Radius)
+				{
+					body.Mass += body2.Mass;
+					body.Velocity += (body2.Velocity * body2.Mass) / body.Mass;
+					body.Density += (body2.Mass / (body.Mass + body2.Mass)) * body2.Density;
+
+					toKill[body2] = body;
+					
+					continue;
+				}
 				
-				double fg = NewtonGravConstant*((body.Mass*body2.Mass)/off.LengthSquared());
-				double force = fg * (body2.Mass / (body.Mass + body2.Mass));
-				double accel = force / body.Mass;
-				
-				acc += -off.Normalize()*accel;
+				double accel = (NewtonGravConstant*body2.Mass)/off.LengthSquared();
+
+				acc += -off.Normalized()*accel;
 			}
 
 			body.OldAcceleration = body.Acceleration;
 			body.Acceleration = acc;
 		}
 
-		foreach (var body in BodyList) {
-			body.Position += body.Velocity*delta + body.OldAcceleration*(delta*delta)*0.5;
+		foreach (var body in BodyList)
+		{
+			body.Position += body.Velocity * delta + body.OldAcceleration*(delta*delta)*0.5;
 			body.Velocity += (body.Acceleration+body.OldAcceleration)*(delta*0.5);
+		}
+
+		foreach (var (body1, body2) in toKill) {
+			BodyList.Remove(body1);
+			OnBodyConsumed?.Invoke(body1, body2);
 		}
 	}
 
 	public class Body {
-		public Vector3D Position;
-		public Vector3D Velocity;
-		public double Mass;
-		public double Density;
-		public double EnergyLumens;
-		public Vector3D OldAcceleration;
-		public Vector3D Acceleration;
+		public Vector3D Position; // meters
+		public Vector3D Velocity; // m/s
+		public double Mass; // kg
+		public double Density; // kg/m^3
+		public double EnergyLumens; // lumen
+		public double Radius; // meters
+		public Vector3D OldAcceleration; // m/s 
+		public Vector3D Acceleration; // m/s
+		public string Name;
 	}
 }
 
 public class SpaceObject {
-	public MeshInstance3D Mesh;
+	public MeshInstance3D MeshInstance;
+	public SphereMesh Mesh;
 	public StaticBody3D Body3D;
 	public CollisionShape3D Collider;
 	public Simulation.Body SimBody;
@@ -71,31 +101,29 @@ public class SpaceObject {
 
 	public StoredImage Image;
 
-	public SpaceObject(Simulation.Body simbody, double scale = 1) {
+	public SpaceObject(Simulation.Body simbody, in Workspace.WorkspaceSettings settings) {
 		SimBody = simbody;
 
 		Material = new StandardMaterial3D();
 		Material.AlbedoColor = new Color(1, 1, 1);
-		//Material.AlbedoTexture = GD.Load<CompressedTexture2D>("res://textures/earth.jpg");
-		//Material.AlbedoTexture = ImageTexture.CreateFromImage(new Image()).GetImage().save;
 		
-		Mesh = new MeshInstance3D();
-		Mesh.Mesh = new SphereMesh() {Material = Material};
+		MeshInstance = new MeshInstance3D();
+		MeshInstance.Mesh = Mesh = new SphereMesh() {Material = Material};
 		
 		Body3D = new StaticBody3D();
-		Mesh.AddChild(Body3D);
-		Body3D.Owner = Mesh;
+		MeshInstance.AddChild(Body3D);
+		Body3D.Owner = MeshInstance;
 		
 		Collider = new CollisionShape3D();
 		Collider.Shape = new SphereShape3D();
 
 		Body3D.AddChild(Collider);
-		Collider.Owner = Mesh;
+		Collider.Owner = MeshInstance;
 
 		Light = new OmniLight3D();
 		Light.OmniRange = 4096;
-		Light.OmniAttenuation = 2;
-		Mesh.AddChild(Light);
+		Light.OmniAttenuation = 4;
+		MeshInstance.AddChild(Light);
 		
 		AccelerationArrow = new MeshInstance3D();
 		AccelerationArrow.Mesh = new BoxMesh();
@@ -111,65 +139,69 @@ public class SpaceObject {
 			ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded
 		};
 
-		Mesh.AddChild(AccelerationArrow);
-		Mesh.AddChild(VelocityArrow);
+		MeshInstance.AddChild(AccelerationArrow);
+		MeshInstance.AddChild(VelocityArrow);
 
-		Sync(scale);
+		Sync(in settings);
 	}
 
-	public void Sync(double scale) {
-		var pos = (SimBody.Position/scale).ToVector3F();
-		Mesh.Position = pos;
+	public void Sync(in Workspace.WorkspaceSettings settings) {
+		var pos = (SimBody.Position/settings.VisualScale).ToVector3F();
+		MeshInstance.Position = pos;
 
 		double V = SimBody.Mass / SimBody.Density;
-		double r = Math.Pow(V / (4d / 3d * Math.PI), 1d / 3d) / 1000;
-		double scaled_r = (float)(r / scale) * 100;
+		double r = Math.Pow(V / (4d / 3d * Math.PI), 1d / 3d);
+		double scaled_r = (float)(r / settings.VisualScale)*settings.PlanetVisualScaleMultiplier;
+
+		SimBody.Radius = r;
 		
-		SphereMesh mesh = (SphereMesh)Mesh.Mesh;
-		mesh.Radius = (float)scaled_r / 2;
-		mesh.Height = (float)scaled_r;
+		Mesh.Radius = (float)scaled_r;
+		Mesh.Height = (float)scaled_r*2;
 
-		((SphereShape3D)Collider.Shape).Radius = (float)scaled_r / 2;
-		Body3D.Scale = Mesh.Scale;
-
+		((SphereShape3D)Collider.Shape).Radius = (float)scaled_r;
 
 		if (SimBody.EnergyLumens > 0) {
-			//Material.EmissionEnabled = true;
-			//Material.Emission = new Color(1,1,1);
-			//Material.EmissionIntensity = 0.01f;//(float)(SimBody.EnergyLumens / Math.Pow(10, 17+Math.Log10(scale)));
 			Material.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
-			Light.LightIntensityLumens = (float)(SimBody.EnergyLumens / Math.Pow(10, 17+Math.Log10(scale)));
-			// 100000
+			Light.LightIntensityLumens = (float)(SimBody.EnergyLumens / Math.Pow(settings.VisualScale, 2));
 		} else {
-			//Material.EmissionEnabled = false;
 			Material.ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel;
 			Light.LightIntensityLumens = 0;
 		}
 		
 		var accel = SimBody.Acceleration.ToVector3F();
-		if (accel.Length() >= 0.0001) {
+		if (settings.ShowDebug && accel.Length() >= 0.0001) {
 			AccelerationArrow.Scale = new(0.05f, 0.05f, 1f); //new(0.05f, 0.05f, accel.Length()/(float)scale);
-			var point_accel = Mesh.Position + accel.Normalized()*(AccelerationArrow.Scale.Z/2+Mesh.Scale.Z/2);
+			var point_accel = MeshInstance.Position + accel.Normalized()*(AccelerationArrow.Scale.Z/2+MeshInstance.Scale.Z/2);
 			AccelerationArrow.LookAtFromPosition(point_accel, point_accel+accel);
 		} else {
-			// hack instead of setting Visible so i dont have to set Visible above
-			AccelerationArrow.Scale = new(0.05f, 0.05f, 0);
+			// hack instead of setting Visible
+			AccelerationArrow.Scale = new(0, 0, 0);
 		}
 
 		var vel = SimBody.Velocity.ToVector3F();
-		if (vel.Length() >= 0.0001) {
+		if (settings.ShowDebug && vel.Length() >= 0.0001) {
 			VelocityArrow.Scale = new(0.05f, 0.05f, 1f);; //new(0.05f, 0.05f, vel.Length()/(float)scale);
-			var point_vel = Mesh.Position + vel.Normalized()*(VelocityArrow.Scale.Z/2+Mesh.Scale.Z/2);
+			var point_vel = MeshInstance.Position + vel.Normalized()*(VelocityArrow.Scale.Z/2+MeshInstance.Scale.Z/2);
 			VelocityArrow.LookAtFromPosition(point_vel, point_vel+vel);
 		} else {
-			VelocityArrow.Scale = new(0.05f, 0.05f, 0);
+			VelocityArrow.Scale = new(0, 0, 0);
 		}
+	}
+
+	public void Free()
+	{
+		Body3D.QueueFree();
+		Collider.QueueFree();
+		AccelerationArrow.QueueFree();
+		Light.QueueFree();
+		VelocityArrow.QueueFree();
+		MeshInstance.QueueFree();
 	}
 
 	public void SetTexture(StoredImage img)
 	{
 		Image = img;
-		Material.AlbedoTexture = ImageTexture.CreateFromImage(img.Image);
+		Material.AlbedoTexture = img.Texture;
 	}
 
 	public void RemoveTexture()
@@ -203,9 +235,9 @@ public struct Vector3D {
 		return X*X+Y*Y+Z*Z;
 	}
 
-	public Vector3D Normalize() {
+	public Vector3D Normalized() {
 		var res = this;
-		var ls = res.LengthSquared();
+		var ls = res.Length();
 
 		res.X /= ls;
 		res.Y /= ls;
